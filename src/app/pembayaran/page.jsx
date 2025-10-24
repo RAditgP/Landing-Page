@@ -1,113 +1,413 @@
 "use client";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
-import { CreditCard, Zap, CheckCircle, Package, Banknote, QrCode, Wallet, ArrowLeft, Loader2 } from 'lucide-react'; 
+import { useState, useMemo, useCallback, useEffect } from "react"; 
+import { CreditCard, Zap, CheckCircle, Package, Banknote, QrCode, Wallet, ArrowLeft, Loader2, Info, Lock, Clock, X } from 'lucide-react';
+
+// --- MOCK HOOKS untuk menggantikan 'next/navigation' ---
+
+const useRouter = () => {
+    // Simulasi useRouter untuk back dan push
+    return {
+        back: () => window.history.back(),
+        push: (url) => window.location.href = url,
+    };
+};
+// --- AKHIR MOCK HOOKS ---
+
+// Komponen Input Kustom untuk konsistensi styling
+const CustomInput = ({ id, name, label, value, onChange, placeholder, error, type = 'text', maxLength, disabled }) => (
+    <div className="mb-4">
+        <label htmlFor={id} className="block mb-2 text-sm font-medium text-gray-300">{label}</label>
+        <input
+            type={type}
+            id={id}
+            name={name}
+            value={value}
+            onChange={onChange}
+            required
+            disabled={disabled}
+            maxLength={maxLength}
+            className={`w-full px-4 py-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${error ? 'border-red-500 ring-red-500' : 'border-gray-600 focus:ring-blue-500 border'} disabled:opacity-50`}
+            placeholder={placeholder}
+        />
+        {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+    </div>
+);
+
+// --- KOMPONEN INPUT DINAMIS METODE PEMBAYARAN ---
+const PaymentDetails = ({ methodKey, paymentData, setPaymentData, errors }) => {
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setPaymentData(prev => ({ ...prev, [name]: value }));
+    };
+
+    switch (methodKey) {
+        case 'card':
+            return (
+                <div className="p-4 bg-gray-700 rounded-lg border border-gray-600">
+                    <h4 className="text-base font-semibold text-white mb-3 flex items-center">
+                        <Lock size={16} className="mr-2 text-red-400" /> Detail Kartu Kredit / Debit
+                    </h4>
+                    <CustomInput
+                        id="cardNumber"
+                        name="cardNumber"
+                        label="Nomor Kartu"
+                        type="text"
+                        placeholder="XXXX XXXX XXXX XXXX"
+                        value={paymentData.cardNumber || ''}
+                        onChange={handleChange}
+                        error={errors.cardNumber}
+                        maxLength={16}
+                    />
+                    <div className="flex space-x-4">
+                        <CustomInput
+                            id="expiryDate"
+                            name="expiryDate"
+                            label="Kedaluwarsa (MM/YY)"
+                            type="text"
+                            placeholder="MM/YY"
+                            value={paymentData.expiryDate || ''}
+                            onChange={handleChange}
+                            error={errors.expiryDate}
+                            maxLength={5}
+                        />
+                        <CustomInput
+                            id="cvc"
+                            name="cvc"
+                            label="CVC"
+                            type="password"
+                            placeholder="***"
+                            value={paymentData.cvc || ''}
+                            onChange={handleChange}
+                            error={errors.cvc}
+                            maxLength={4}
+                        />
+                    </div>
+                </div>
+            );
+        case 'va':
+            return (
+                <div className="p-4 bg-gray-700 rounded-lg border border-blue-500/50">
+                    <h4 className="text-base font-semibold text-white mb-2 flex items-center">
+                        <Clock size={16} className="mr-2 text-blue-400" /> Informasi Virtual Account
+                    </h4>
+                    <p className="text-sm text-gray-300">
+                        Nomor Virtual Account akan secara otomatis dibuat dan dikirimkan ke **email** Anda (`${paymentData.email || 'alamat_email@anda.com'}`) setelah Anda menekan tombol Bayar. Pembayaran memiliki batas waktu 24 jam.
+                    </p>
+                </div>
+            );
+        case 'qris':
+            return (
+                <div className="p-4 bg-gray-700 rounded-lg border border-green-500/50">
+                    <h4 className="text-base font-semibold text-white mb-2 flex items-center">
+                        <QrCode size={16} className="mr-2 text-green-400" /> Pembayaran QRIS
+                    </h4>
+                    <p className="text-sm text-gray-300">
+                        Kode QRIS akan ditampilkan di halaman berikutnya. Anda dapat memindai kode tersebut menggunakan aplikasi pembayaran digital apa pun (GoPay, OVO, ShopeePay, m-Banking).
+                    </p>
+                </div>
+            );
+        default:
+            return <p className="text-sm text-gray-400 p-2">Tidak ada detail pembayaran tambahan yang diperlukan untuk metode ini.</p>;
+    }
+};
+
+
+// --- KOMPONEN MODAL PAYMENT GATEWAY (SIMULASI OTP) ---
+const PaymentGatewayModal = ({ show, onClose, onConfirmPayment, totalFinalDisplay, paymentMethodName, isLoading, error }) => {
+    const [otpInput, setOtpInput] = useState('');
+    const [otpError, setOtpError] = useState('');
+
+    if (!show) return null;
+
+    const handleOtpChange = (e) => {
+        const value = e.target.value.replace(/\D/g, ''); // Hanya angka
+        setOtpInput(value);
+        setOtpError('');
+    };
+
+    const handleConfirm = () => {
+        if (otpInput === '123456') { // Kode OTP simulasi yang benar
+            onConfirmPayment();
+        } else {
+            setOtpError('Kode OTP tidak valid. Gunakan 123456 sebagai simulasi.');
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+            <div className="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl border border-blue-500 max-w-sm w-full transform transition-all duration-300 scale-100">
+                <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+                    <h2 className="text-xl font-bold text-yellow-400 flex items-center">
+                        <Lock size={20} className="mr-2" /> Verifikasi Pembayaran
+                    </h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white transition">
+                        <X size={24} />
+                    </button>
+                </div>
+
+                <p className="text-sm text-gray-300 mb-4">
+                    Transaksi senilai <span className="font-bold text-lg text-white">{totalFinalDisplay}</span> akan diproses menggunakan **{paymentMethodName}**.
+                </p>
+
+                <div className="mb-4 p-3 bg-gray-700 rounded-lg">
+                    <p className="text-sm text-gray-400 mb-2">
+                        Kami telah mengirimkan Kode OTP 6 digit ke nomor ponsel terdaftar.
+                    </p>
+                    <CustomInput
+                        id="otp"
+                        name="otp"
+                        label="Kode OTP (Simulasi)"
+                        type="text"
+                        placeholder="123456"
+                        value={otpInput}
+                        onChange={handleOtpChange}
+                        error={otpError}
+                        maxLength={6}
+                    />
+                    <p className="text-xs text-red-400 mt-[-10px]">{otpError}</p>
+                </div>
+                
+                {error && (
+                    <div className="bg-red-900/50 border border-red-500 text-red-300 p-3 rounded-lg text-sm mb-4">
+                        {error}
+                    </div>
+                )}
+
+
+                <button
+                    onClick={handleConfirm}
+                    disabled={isLoading || otpInput.length !== 6}
+                    className="w-full py-3 font-extrabold rounded-lg transition duration-300 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white disabled:bg-gray-600 disabled:text-gray-400"
+                >
+                    {isLoading ? (
+                        <><Loader2 size={20} className="mr-2 animate-spin" /> Memverifikasi...</>
+                    ) : (
+                        <><CheckCircle size={20} className="mr-2" /> Konfirmasi Bayar</>
+                    )}
+                </button>
+            </div>
+        </div>
+    );
+};
+// --- AKHIR MODAL ---
+
 
 export default function PembayaranPage() {
-    const searchParams = useSearchParams();
+    // --- START: HYDRATION FIX ---
+    const [isMounted, setIsMounted] = useState(false);
+    const [urlPlanKey, setUrlPlanKey] = useState("gratis"); // Default safe for SSR
     const router = useRouter();
 
+    useEffect(() => {
+        // This code runs only on the client after mounting
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const plan = params.get("plan")?.toLowerCase();
+            if (plan) {
+                setUrlPlanKey(plan);
+            }
+        }
+        setIsMounted(true);
+    }, []);
+
+    const planKey = urlPlanKey;
+    // --- END: HYDRATION FIX ---
+
+
+    // --- DATA CONFIG ---
     const PAYMENT_METHODS = [
         { key: "transfer", name: "Transfer Bank", icon: Banknote },
+        { key: "va", name: "Virtual Account", icon: Banknote }, 
         { key: "qris", name: "QRIS", icon: QrCode },
         { key: "card", name: "Kartu Kredit / Debit", icon: CreditCard },
         { key: "e-wallet", name: "GoPay / OVO / Dana", icon: Wallet },
     ];
 
     const PLANS_DATA = {
-        pro: { name: "Pro", price: "Rp 49.000", key: "pro" },
-        bisnis: { name: "Bisnis", price: "Rp 99.000", key: "bisnis" },
-        gratis: { name: "Gratis", price: "Rp 0", key: "gratis" }
+        pro: { name: "Pro", priceValue: 49000, priceDisplay: "Rp 49.000", key: "pro" },
+        bisnis: { name: "Bisnis", priceValue: 99000, priceDisplay: "Rp 99.000", key: "bisnis" },
+        gratis: { name: "Gratis", priceValue: 0, priceDisplay: "Rp 0", key: "gratis" }
     };
 
-    const planKey = searchParams.get("plan")?.toLowerCase() || "gratis";
+    const PPN_RATE = 0.11; // 11% PPN
+
+    // Gunakan planKey dari state (yang aman dari SSR)
     const selectedPlan = PLANS_DATA[planKey] || PLANS_DATA.gratis;
 
+    // --- LOGIKA HARGA ---
+    const { subtotal, ppn, totalFinal, totalFinalDisplay } = useMemo(() => {
+        const subtotalValue = selectedPlan.priceValue;
+        const ppnValue = subtotalValue > 0 ? subtotalValue * PPN_RATE : 0;
+        const totalFinalValue = subtotalValue + ppnValue;
+
+        const formatRupiah = (value) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(value);
+        };
+
+        return {
+            subtotal: formatRupiah(subtotalValue),
+            ppn: formatRupiah(ppnValue),
+            totalFinal: totalFinalValue,
+            totalFinalDisplay: formatRupiah(totalFinalValue),
+        };
+    }, [selectedPlan.priceValue]);
+
+    // --- STATE FORM & LOADING ---
     const [formData, setFormData] = useState({
         nama: "",
         email: "",
-        metode: selectedPlan.price !== 'Rp 0' ? PAYMENT_METHODS[0].key : '',
+        // Metode diinisialisasi berdasarkan harga paket yang sudah aman
+        metode: selectedPlan.priceValue > 0 ? PAYMENT_METHODS[0].key : '', 
+        setujuSNC: false,
     });
+    
+    // STATE UNTUK DETAIL PEMBAYARAN TAMBAHAN
+    const [paymentData, setPaymentData] = useState({
+        cardNumber: '',
+        expiryDate: '',
+        cvc: '',
+    });
+
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [validationErrors, setValidationErrors] = useState({});
+    
+    // STATE UNTUK MODAL OTP
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({ 
+            ...prev, 
+            [name]: type === 'checkbox' ? checked : value 
+        }));
+        setValidationErrors(prev => ({ ...prev, [name]: '' }));
         setError('');
     };
 
-   
-const handleBayar = async (e) => {
-    e.preventDefault(); 
-    setIsLoading(true);
-    setError('');
+    // Fungsi untuk melanjutkan ke halaman sukses (dipanggil dari modal)
+    const proceedToSuccessPage = useCallback(async () => {
+        setIsLoading(true);
+        setError('');
 
-    // ... (Validasi dan Body Request) ...
+        const methodDisplay = PAYMENT_METHODS.find(m => m.key === formData.metode)?.name || formData.metode;
+        // Gunakan date.now() untuk ID yang lebih unik, namun Math.random() juga cukup
+        const transactionId = 'INV-' + Math.floor(Math.random() * 1000000) + Date.now().toString().slice(-4); 
 
-    const body = {
-        nama: formData.nama,
-        email: formData.email,
-        metode: formData.metode,
-        plan: {
-            name: selectedPlan.name,
-            price: selectedPlan.price.replace(/[Rp. ]/g, ''),
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1500)); 
+
+            const queryParams = new URLSearchParams({
+                id: transactionId,
+                paket: selectedPlan.name,
+                harga: totalFinalDisplay, 
+                metode: methodDisplay,
+                email: formData.email
+            });
+
+            router.push(`/pembayaran/sukses?${queryParams.toString()}`);
+
+        } catch (err) {
+            console.error("Client side error during final confirmation:", err);
+            setError('Terjadi kesalahan saat konfirmasi akhir. Silakan coba lagi.');
+        } finally {
+            setIsLoading(false);
         }
+    }, [formData, selectedPlan, totalFinalDisplay, router, PAYMENT_METHODS]);
+
+
+    // --- VALIDASI FORM UTAMA DAN DETAIL PEMBAYARAN ---
+    const validateForm = () => {
+        const errors = {};
+        let detailErrors = {};
+
+        if (!formData.nama.trim()) { errors.nama = "Nama lengkap wajib diisi."; }
+        if (!formData.email.trim()) { errors.email = "Email wajib diisi."; } 
+        else if (!/\S+@\S+\.\S+/.test(formData.email)) { errors.email = "Format email tidak valid."; }
+
+        if (selectedPlan.priceValue > 0) {
+            if (!formData.metode) { errors.metode = "Metode pembayaran wajib dipilih."; }
+            if (!formData.setujuSNC) { errors.setujuSNC = "Anda harus menyetujui Syarat & Ketentuan."; }
+
+            // Validasi Detail Pembayaran Kartu
+            if (formData.metode === 'card') {
+                if (!paymentData.cardNumber || paymentData.cardNumber.length !== 16) {
+                    detailErrors.cardNumber = "Nomor kartu harus 16 digit.";
+                }
+                if (!paymentData.expiryDate || !/^\d{2}\/\d{2}$/.test(paymentData.expiryDate)) {
+                    detailErrors.expiryDate = "Format kedaluwarsa tidak valid (MM/YY).";
+                }
+                if (!paymentData.cvc || paymentData.cvc.length < 3) {
+                    detailErrors.cvc = "CVC harus 3 atau 4 digit.";
+                }
+            }
+        }
+        
+        const combinedErrors = { ...errors, ...detailErrors };
+        setValidationErrors(combinedErrors);
+
+        return Object.keys(combinedErrors).length === 0;
     };
 
-    try {
-        const res = await fetch('/api/pembayaran', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-        });
-
-        // Hentikan proses jika respons bukan 2xx (tapi jangan jalankan .json() dulu)
-        if (!res.ok) {
-            // Coba parsing JSON dari error response, jika gagal, fallback ke pesan default
-            let errorMessage = `Server Error: ${res.status}`;
-            try {
-                const errorData = await res.json(); 
-                errorMessage = errorData.message || errorMessage;
-            } catch (jsonError) {
-                // Jika server mengembalikan HTML (bukan JSON) pada error, gunakan pesan default
-                console.error("Failed to parse error JSON:", jsonError);
-            }
-            throw new Error(errorMessage);
+    // --- HANDLE PEMBAYARAN (MAIN BUTTON CLICK) ---
+    const handleBayar = async (e) => {
+        e.preventDefault();
+        
+        if (!validateForm()) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setError('Mohon lengkapi semua data yang diperlukan dengan benar.');
+            return;
+        }
+        
+        const methodKey = formData.metode;
+        
+        // Cek apakah metode memerlukan modal verifikasi (Kartu Kredit/E-Wallet)
+        if (methodKey === 'card' || methodKey === 'e-wallet') {
+            setShowPaymentModal(true);
+            return; 
         }
 
-        // --- FETCH BERHASIL (Status 200 OK) ---
-        const data = await res.json();
-        console.log("Transaksi sukses, ID:", data.id);
+        // Untuk metode non-interaktif (VA, Transfer, QRIS): langsung proses dan redirect
+        setIsLoading(true);
         
-        // Buat Query String untuk data paket yang diperlukan halaman sukses
-        const queryParams = new URLSearchParams({
-            id: data.id,
-            paket: selectedPlan.name.toLowerCase(), // Kirim nama paket
-            harga: selectedPlan.price,             // Kirim harga dengan format Rp. untuk display
-            metode: formData.metode                // Kirim metode pembayaran
-        });
-
-        // 🔥 PENGALIHAN FINAL & BENAR: Menggunakan path /pembayaran/sukses
-        router.push(`/pembayaran/sukses?${queryParams.toString()}`); 
-        // 👇 Penting: Jangan lakukan operasi lain setelah router.push
-
-    } catch (err) {
-        console.error("Client side error:", err);
-        setError(err.message || 'Terjadi kesalahan saat memproses pembayaran.');
-    } finally {
-        setIsLoading(false);
-    }
-};
-
-
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000)); 
+            proceedToSuccessPage();
+        } catch (err) {
+            console.error("Client side error during non-interactive payment:", err);
+            setError(err.message || 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
+        } 
+    };
 
     const handleBack = () => router.back();
+    
+    // Tombol CTA Label
+    const ctaLabel = selectedPlan.priceValue === 0 
+        ? 'Lanjutkan Pendaftaran' 
+        : `Bayar ${totalFinalDisplay} Sekarang`;
+
+    const paymentMethodName = PAYMENT_METHODS.find(m => m.key === formData.metode)?.name;
+    
+    // Tampilkan loader atau konten utama hanya setelah mount untuk menghindari CLS/FOUC
+    if (!isMounted) {
+        return (
+             <main className="bg-gray-900 min-h-screen text-white pt-10 pb-20 font-inter flex justify-center items-center">
+                <Loader2 size={32} className="animate-spin text-blue-500" />
+                <span className="ml-3 text-lg text-blue-400">Memuat halaman pembayaran...</span>
+            </main>
+        );
+    }
 
     return (
-        <main className="bg-gray-900 min-h-screen text-white pt-20">
-            <section className="py-10 px-4 sm:px-8 flex flex-col items-center">
+        <main className="bg-gray-900 min-h-screen text-white pt-10 pb-20 font-inter">
+            <section className="px-4 sm:px-8 flex flex-col items-center">
                 <div className="max-w-lg w-full mb-6">
                     <button 
                         onClick={handleBack}
@@ -117,53 +417,83 @@ const handleBayar = async (e) => {
                         Kembali ke Pilihan Paket
                     </button>
                     <div className="flex items-center text-left">
-                        <CreditCard size={32} className="text-yellow-400 mr-2" />
+                        <CreditCard size={32} className="text-yellow-400 mr-2 hidden sm:block" />
                         <h1 className="text-3xl sm:text-4xl font-extrabold">Penyelesaian Pembayaran</h1>
                     </div>
                 </div>
                 
-                <div className="bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 max-w-lg w-full">
-                    <div className="bg-gray-700 p-5 rounded-lg mb-6 border border-blue-500/50">
-                        <div className="flex justify-between items-center mb-1">
+                <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl border border-gray-700 max-w-lg w-full">
+                    
+                    {/* --- 1. RINGKASAN HARGA TRANSPRAN --- */}
+                    <div className="bg-gray-700 p-5 rounded-xl mb-6 border border-blue-500/50">
+                        <div className="flex justify-between items-center mb-1 pb-2 border-b border-gray-600">
                             <div className="flex items-center text-xl font-bold text-white">
                                 <Package size={20} className="mr-2 text-green-400" /> 
                                 Paket: {selectedPlan.name}
                             </div>
-                            <span className={`text-2xl font-extrabold ${selectedPlan.price === 'Rp 0' ? 'text-green-400' : 'text-blue-400'}`}>
-                                {selectedPlan.price}
+                            <span className="text-2xl font-extrabold text-blue-400">
+                                {selectedPlan.priceDisplay}
                             </span>
                         </div>
-                        <p className="text-sm text-gray-400">Harga final per bulan.</p>
+                        
+                        {selectedPlan.priceValue > 0 && (
+                            <div className="mt-3 space-y-1 text-sm">
+                                <div className="flex justify-between text-gray-300">
+                                    <span>Subtotal</span>
+                                    <span>{subtotal}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-300">
+                                    <span className="flex items-center">
+                                        PPN (11%)
+                                        <Info size={14} className="ml-1 text-gray-500" title="Pajak Pertambahan Nilai" />
+                                    </span>
+                                    <span>{ppn}</span>
+                                </div>
+                                <div className="flex justify-between pt-2 border-t border-gray-600 text-lg font-bold">
+                                    <span>TOTAL AKHIR</span>
+                                    <span className="text-yellow-400">{totalFinalDisplay}</span>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <p className="text-sm text-gray-400 mt-2">Harga sudah termasuk pajak untuk pembayaran per bulan.</p>
                     </div>
 
                     <form className="space-y-6" onSubmit={handleBayar}>
-                        <div>
-                            <label htmlFor="nama" className="block mb-2 text-sm font-medium text-gray-300">Nama Lengkap</label>
-                            <input
-                                type="text"
-                                id="nama"
-                                name="nama"
-                                value={formData.nama}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Masukkan nama kamu"
-                            />
-                        </div>
+                        
+                        {/* --- 6. PESAN ERROR UTAMA (Di atas form) --- */}
+                        {error && (
+                            <div className="bg-red-900/50 border border-red-500 text-red-300 p-3 rounded-lg text-sm transition-opacity duration-300">
+                                {error}
+                            </div>
+                        )}
 
-                        <div>
-                            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-300">Email</label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Masukkan email kamu"
-                            />
-                        </div>
+                        {/* --- 2. INPUT NAMA --- */}
+                        <CustomInput
+                            id="nama"
+                            name="nama"
+                            label="Nama Lengkap"
+                            type="text"
+                            placeholder="Masukkan nama kamu"
+                            value={formData.nama}
+                            onChange={handleChange}
+                            error={validationErrors.nama}
+                        />
 
-                        {selectedPlan.price !== 'Rp 0' && (
+                        {/* --- 3. INPUT EMAIL --- */}
+                        <CustomInput
+                            id="email"
+                            name="email"
+                            label="Email"
+                            type="email"
+                            placeholder="Masukkan email kamu"
+                            value={formData.email}
+                            onChange={handleChange}
+                            error={validationErrors.email}
+                        />
+
+                        {/* --- 4. METODE PEMBAYARAN (Hanya untuk paket berbayar) --- */}
+                        {selectedPlan.priceValue > 0 && (
                             <div>
                                 <h3 className="mb-3 text-sm font-medium text-gray-300">Pilih Metode Pembayaran</h3>
                                 <div className="space-y-3">
@@ -174,18 +504,18 @@ const handleBayar = async (e) => {
                                         return (
                                             <label
                                                 key={method.key}
-                                                className={`flex items-center p-4 rounded-lg cursor-pointer transition duration-200 border-2 ${
-                                                    isSelected
-                                                        ? 'bg-blue-600 border-blue-400 text-white shadow-lg'
+                                                className={`flex items-center p-4 rounded-xl cursor-pointer transition duration-200 border-2 shadow-sm
+                                                    ${isSelected
+                                                        ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/30'
                                                         : 'bg-gray-700 border-gray-600 hover:bg-gray-600 hover:border-blue-500/50'
-                                                }`}
+                                                    }`}
                                             >
                                                 <input
                                                     type="radio"
                                                     name="metode"
                                                     value={method.key}
                                                     checked={isSelected}
-                                                    onChange={(e) => setFormData({ ...formData, metode: e.target.value })}
+                                                    onChange={handleChange} // Menggunakan handleChange utama
                                                     className="hidden"
                                                 />
                                                 <IconComponent size={24} className={`mr-4 ${isSelected ? 'text-white' : 'text-blue-400'}`} />
@@ -195,37 +525,78 @@ const handleBayar = async (e) => {
                                         );
                                     })}
                                 </div>
+                                {validationErrors.metode && <p className="mt-1 text-xs text-red-400">{validationErrors.metode}</p>}
                             </div>
                         )}
 
-                        {error && (
-                            <div className="bg-red-900/50 border border-red-500 text-red-300 p-3 rounded-lg text-sm transition-opacity duration-300">
-                                {error}
+                        {/* --- 4b. DETAIL INPUT DINAMIS BERDASARKAN METODE --- */}
+                        {selectedPlan.priceValue > 0 && formData.metode && (
+                            <div className="mt-6">
+                                <PaymentDetails 
+                                    methodKey={formData.metode} 
+                                    paymentData={{...paymentData, email: formData.email}} 
+                                    setPaymentData={setPaymentData}
+                                    errors={validationErrors}
+                                />
+                            </div>
+                        )}
+                        
+                        {/* --- 5. PERSETUJUAN SYARAT & KETENTUAN (Hanya untuk paket berbayar) --- */}
+                        {selectedPlan.priceValue > 0 && (
+                            <div className="pt-2">
+                                <label className="flex items-start cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        name="setujuSNC"
+                                        checked={formData.setujuSNC}
+                                        onChange={handleChange}
+                                        className="mt-1 mr-3 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-300">
+                                        Saya telah membaca dan menyetujui <a href="/syarat-ketentuan" target="_blank" className="text-blue-400 hover:underline">Syarat & Ketentuan</a> dan <a href="/kebijakan-privasi" target="_blank" className="text-blue-400 hover:underline">Kebijakan Privasi</a>.
+                                    </span>
+                                </label>
+                                {validationErrors.setujuSNC && <p className="mt-1 text-xs text-red-400">{validationErrors.setujuSNC}</p>}
                             </div>
                         )}
 
+
+                        {/* --- 7. TOMBOL CTA --- */}
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`mt-6 w-full py-3 font-bold rounded-lg shadow-md transition duration-300 flex items-center justify-center 
-                                ${selectedPlan.price === 'Rp 0' ? 'bg-green-500 hover:bg-green-400 text-gray-900' : 'bg-blue-600 hover:bg-blue-500 text-white'}
-                                disabled:bg-gray-600 disabled:text-gray-400`}
+                            className={`mt-6 w-full py-4 font-extrabold rounded-xl shadow-lg transition duration-300 flex items-center justify-center text-lg
+                                ${selectedPlan.priceValue === 0 
+                                    ? 'bg-green-500 hover:bg-green-400 text-gray-900 shadow-green-500/40' 
+                                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/40'}
+                                disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed`}
                         >
                             {isLoading ? (
                                 <><Loader2 size={20} className="mr-2 animate-spin" /> Memproses...</>
-                            ) : selectedPlan.price === 'Rp 0' ? (
-                                <><CheckCircle size={20} className="mr-2" /> Lanjutkan Pendaftaran</>
+                            ) : selectedPlan.priceValue === 0 ? (
+                                <><CheckCircle size={20} className="mr-2" /> {ctaLabel}</>
                             ) : (
-                                <><Zap size={20} className="mr-2" /> Bayar {selectedPlan.price} Sekarang</>
+                                <><Zap size={20} className="mr-2" /> {ctaLabel}</>
                             )}
                         </button>
                     </form>
                     
                     <p className="text-center text-xs text-gray-500 mt-6">
-                        Pembayaran Anda aman. Kami tidak menyimpan detail kartu kredit Anda.
+                        <CreditCard size={14} className="inline mr-1 text-gray-500" /> Transaksi dijamin aman dan terenkripsi.
                     </p>
                 </div>
             </section>
+            
+            {/* --- MODAL PAYMENT GATEWAY --- */}
+            <PaymentGatewayModal
+                show={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                onConfirmPayment={proceedToSuccessPage}
+                totalFinalDisplay={totalFinalDisplay}
+                paymentMethodName={paymentMethodName}
+                isLoading={isLoading}
+                error={error}
+            />
         </main>
     );
 }
