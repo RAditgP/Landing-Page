@@ -18,3 +18,12 @@ model Template {
   useUrl    String?
   createdAt DateTime @default(now())
 }
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  nama      String
+  email     String
+  paket     String
+  harga     String
+  metode    String
+  createdAt DateTime @default(now())
+}
