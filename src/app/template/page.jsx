@@ -7,8 +7,16 @@ import Footer from "../components/Footer";
 const TemplateCard = ({ template }) => (
   <div className="bg-gray-800 rounded-lg shadow-lg p-4 transition duration-300 hover:scale-[1.02]">
     <div className="h-48 bg-gray-700 rounded-md mb-4 flex items-center justify-center text-gray-400">
-      {/* Ganti dengan tag <img /> yang sebenarnya */}
-          </div>
+      {template.image ? (
+        <img
+          src={template.image}
+          alt={template.name}
+          className="w-full h-full object-cover rounded-md"
+        />
+      ) : (
+        <span>Image Placeholder</span>
+      )}
+    </div>
     <h3 className="text-xl font-semibold text-white mb-2">{template.name}</h3>
     <p className="text-sm text-gray-400 mb-3">{template.description}</p>
     <div className="flex justify-between items-center">
@@ -16,7 +24,7 @@ const TemplateCard = ({ template }) => (
         {template.category}
       </span>
       <a
-        href={template.link || "#"}
+        href={template.demoUrl || template.useUrl || "#"}
         target="_blank"
         rel="noopener noreferrer"
         className="text-indigo-400 hover:text-indigo-300 transition duration-150"

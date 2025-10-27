@@ -8,15 +8,15 @@ datasource db {
 }
 
 model Template {
-  id        Int      @id @default(autoincrement())
-  name      String
-  category  String
-  desc      String
-  tag       String?
-  imageUrl  String?
-  demoUrl   String?
-  useUrl    String?
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String
+  description String
+  tag         String?
+  image       String?
+  demoUrl     String?
+  useUrl      String?
+  createdAt   DateTime @default(now())
 }
 model Transaction {
   id        Int      @id @default(autoincrement())
