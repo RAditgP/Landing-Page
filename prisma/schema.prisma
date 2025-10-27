@@ -27,3 +27,11 @@ model Transaction {
   metode    String
   createdAt DateTime @default(now())
 }
+model PesanKontak {
+  id           String    @id @default(uuid()) // ID unik untuk pesan
+  namaLengkap  String
+  alamatEmail  String
+  pesanAnda    String
+  dibaca       Boolean   @default(false) // Status pesan, apakah sudah dibaca admin
+  dikirimPada  DateTime  @default(now()) // Waktu pengiriman
+}

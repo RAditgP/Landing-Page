@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo, useCallback, useEffect } from "react"; 
-import { CreditCard, Zap, CheckCircle, Package, Banknote, QrCode, Wallet, ArrowLeft, Loader2, Info, Lock, Clock, X } from 'lucide-react';
+import { CreditCard, Zap, CheckCircle, Package, Banknote, QrCode, Wallet, ArrowLeft, Loader2, Info, Lock, Clock, X, Copy } from 'lucide-react';
 
 // --- MOCK HOOKS untuk menggantikan 'next/navigation' ---
 
@@ -85,14 +85,15 @@ const PaymentDetails = ({ methodKey, paymentData, setPaymentData, errors }) => {
                     </div>
                 </div>
             );
+        case 'transfer':
         case 'va':
             return (
                 <div className="p-4 bg-gray-700 rounded-lg border border-blue-500/50">
                     <h4 className="text-base font-semibold text-white mb-2 flex items-center">
-                        <Clock size={16} className="mr-2 text-blue-400" /> Informasi Virtual Account
+                        <Clock size={16} className="mr-2 text-blue-400" /> Informasi Transfer / Virtual Account
                     </h4>
                     <p className="text-sm text-gray-300">
-                        Nomor Virtual Account akan secara otomatis dibuat dan dikirimkan ke **email** Anda (`${paymentData.email || 'alamat_email@anda.com'}`) setelah Anda menekan tombol Bayar. Pembayaran memiliki batas waktu 24 jam.
+                        Anda akan menerima nomor Virtual Account (atau rekening tujuan) dan instruksi lengkap di modal pop-up setelah menekan tombol Bayar. Pembayaran memiliki batas waktu 24 jam.
                     </p>
                 </div>
             );
@@ -103,7 +104,7 @@ const PaymentDetails = ({ methodKey, paymentData, setPaymentData, errors }) => {
                         <QrCode size={16} className="mr-2 text-green-400" /> Pembayaran QRIS
                     </h4>
                     <p className="text-sm text-gray-300">
-                        Kode QRIS akan ditampilkan di halaman berikutnya. Anda dapat memindai kode tersebut menggunakan aplikasi pembayaran digital apa pun (GoPay, OVO, ShopeePay, m-Banking).
+                        Kode QRIS akan ditampilkan di modal pop-up setelah Anda menekan Bayar. Anda dapat memindai kode tersebut menggunakan aplikasi pembayaran digital apa pun.
                     </p>
                 </div>
             );
@@ -111,6 +112,109 @@ const PaymentDetails = ({ methodKey, paymentData, setPaymentData, errors }) => {
             return <p className="text-sm text-gray-400 p-2">Tidak ada detail pembayaran tambahan yang diperlukan untuk metode ini.</p>;
     }
 };
+
+// --- KOMPONEN MODAL INSTRUKSI PEMBAYARAN (Transfer/VA/QRIS) ---
+const PaymentInstructionModal = ({ show, onClose, onFinishPayment, totalFinalDisplay, paymentMethodName, isLoading, methodKey }) => {
+    
+    if (!show) return null;
+
+    // Data simulasi
+    const bankName = "BCA (Simulasi)";
+    const virtualAccount = "7000187845612345";
+    const expiration = "24 Oktober 2025, 15:00 WIB";
+
+    const handleCopy = (text) => {
+        // Menggunakan document.execCommand('copy') karena navigator.clipboard mungkin diblokir di iframe
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        alert('Nomor Virtual Account disalin!'); // Ganti dengan pesan notifikasi yang lebih baik jika bisa
+    };
+    
+    // Konten dinamis berdasarkan metode
+    const renderContent = () => {
+        if (methodKey === 'qris') {
+             return (
+                <div className="text-center">
+                    <QrCode size={120} className="mx-auto text-white bg-blue-500 p-4 rounded-xl mb-4" />
+                    <p className="text-lg font-bold text-white mb-1">Pindai Kode QRIS Ini</p>
+                    <p className="text-sm text-gray-400">Gunakan aplikasi pembayaran digital (GoPay, OVO, m-Banking) untuk memindai kode ini dan menyelesaikan pembayaran.</p>
+                </div>
+            );
+        }
+
+        // Default: Transfer / VA
+        return (
+            <div>
+                <div className="mb-4 p-4 bg-blue-900/40 rounded-lg border border-blue-600">
+                    <p className="text-sm text-blue-300 mb-1">Bank Tujuan</p>
+                    <p className="text-xl font-extrabold text-white">{bankName}</p>
+                </div>
+
+                <div className="mb-4 p-4 bg-gray-700 rounded-lg border border-gray-600">
+                    <p className="text-sm text-gray-400 mb-1">{paymentMethodName} (Simulasi)</p>
+                    <div className="flex justify-between items-center">
+                        <span className="text-2xl font-extrabold text-yellow-400 tracking-wider">{virtualAccount}</span>
+                        <button 
+                            onClick={() => handleCopy(virtualAccount)} 
+                            className="p-2 ml-3 rounded-lg bg-gray-600 hover:bg-gray-500 text-white transition flex items-center text-sm"
+                        >
+                            <Copy size={16} className="mr-1" /> Salin
+                        </button>
+                    </div>
+                </div>
+                
+                <div className="mb-4 p-3 bg-red-900/40 rounded-lg flex items-center">
+                    <Clock size={16} className="text-red-400 mr-2 flex-shrink-0" />
+                    <p className="text-xs text-red-300">Batas waktu pembayaran: {expiration}</p>
+                </div>
+
+                <p className="text-sm text-gray-300 mb-4">
+                    Instruksi lengkap telah dikirimkan ke email Anda. Silakan transfer tepat <span className="font-bold text-white">{totalFinalDisplay}</span> untuk menghindari kegagalan sistem.
+                </p>
+            </div>
+        );
+    };
+
+    return (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+            <div className="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl border border-blue-500 max-w-md w-full transform transition-all duration-300 scale-100">
+                <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+                    <h2 className="text-xl font-bold text-white flex items-center">
+                        <Banknote size={20} className="mr-2 text-green-400" /> {methodKey === 'qris' ? 'QRIS Dibuat' : 'Detail Pembayaran Dibuat'}
+                    </h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white transition">
+                        <X size={24} />
+                    </button>
+                </div>
+
+                {renderContent()}
+
+                <button
+                    onClick={onFinishPayment}
+                    disabled={isLoading}
+                    className="w-full py-3 font-extrabold rounded-lg transition duration-300 mt-4 flex items-center justify-center bg-green-600 hover:bg-green-500 text-white disabled:bg-gray-600 disabled:text-gray-400"
+                >
+                    {isLoading ? (
+                        <><Loader2 size={20} className="mr-2 animate-spin" /> Memproses...</>
+                    ) : (
+                        <><CheckCircle size={20} className="mr-2" /> Saya Sudah Bayar (Simulasi Selesai)</>
+                    )}
+                </button>
+                <button
+                    onClick={onClose}
+                    className="w-full py-2 font-medium rounded-lg transition duration-300 mt-2 text-sm text-gray-400 hover:text-white"
+                >
+                    Tutup dan Kembali
+                </button>
+            </div>
+        </div>
+    );
+};
+// --- AKHIR MODAL INSTRUKSI ---
 
 
 // --- KOMPONEN MODAL PAYMENT GATEWAY (SIMULASI OTP) ---
@@ -190,7 +294,7 @@ const PaymentGatewayModal = ({ show, onClose, onConfirmPayment, totalFinalDispla
         </div>
     );
 };
-// --- AKHIR MODAL ---
+// --- AKHIR MODAL OTP ---
 
 
 export default function PembayaranPage() {
@@ -278,8 +382,9 @@ export default function PembayaranPage() {
     const [error, setError] = useState('');
     const [validationErrors, setValidationErrors] = useState({});
     
-    // STATE UNTUK MODAL OTP
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    // STATE UNTUK MODAL
+    const [showPaymentModal, setShowPaymentModal] = useState(false); // Untuk OTP/Card
+    const [showInstructionModal, setShowInstructionModal] = useState(false); // Untuk VA/Transfer/QRIS
 
 
     const handleChange = (e) => {
@@ -302,6 +407,7 @@ export default function PembayaranPage() {
         const transactionId = 'INV-' + Math.floor(Math.random() * 1000000) + Date.now().toString().slice(-4); 
 
         try {
+            // Simulasi loading sebelum redirect
             await new Promise(resolve => setTimeout(resolve, 1500)); 
 
             const queryParams = new URLSearchParams({
@@ -319,6 +425,9 @@ export default function PembayaranPage() {
             setError('Terjadi kesalahan saat konfirmasi akhir. Silakan coba lagi.');
         } finally {
             setIsLoading(false);
+            // Tutup modal setelah proses (jika belum redirect)
+            setShowPaymentModal(false);
+            setShowInstructionModal(false);
         }
     }, [formData, selectedPlan, totalFinalDisplay, router, PAYMENT_METHODS]);
 
@@ -370,20 +479,29 @@ export default function PembayaranPage() {
         
         // Cek apakah metode memerlukan modal verifikasi (Kartu Kredit/E-Wallet)
         if (methodKey === 'card' || methodKey === 'e-wallet') {
+            // Tampilkan modal OTP/Verifikasi
             setShowPaymentModal(true);
             return; 
         }
 
-        // Untuk metode non-interaktif (VA, Transfer, QRIS): langsung proses dan redirect
-        setIsLoading(true);
-        
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000)); 
-            proceedToSuccessPage();
-        } catch (err) {
-            console.error("Client side error during non-interactive payment:", err);
-            setError(err.message || 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
-        } 
+        // Cek apakah metode memerlukan modal instruksi (Transfer, VA, QRIS)
+        if (methodKey === 'transfer' || methodKey === 'va' || methodKey === 'qris') {
+            // Tampilkan modal Instruksi Pembayaran (VA/QRIS)
+            setShowInstructionModal(true);
+            return;
+        }
+
+        // Untuk paket GRATIS (priceValue === 0)
+        if (selectedPlan.priceValue === 0) {
+            setIsLoading(true);
+            try {
+                await new Promise(resolve => setTimeout(resolve, 1000)); 
+                proceedToSuccessPage();
+            } catch (err) {
+                console.error("Client side error during free plan sign up:", err);
+                setError(err.message || 'Terjadi kesalahan saat pendaftaran. Silakan coba lagi.');
+            }
+        }
     };
 
     const handleBack = () => router.back();
@@ -587,7 +705,7 @@ export default function PembayaranPage() {
                 </div>
             </section>
             
-            {/* --- MODAL PAYMENT GATEWAY --- */}
+            {/* --- MODAL PAYMENT GATEWAY (OTP) --- */}
             <PaymentGatewayModal
                 show={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}
@@ -596,6 +714,17 @@ export default function PembayaranPage() {
                 paymentMethodName={paymentMethodName}
                 isLoading={isLoading}
                 error={error}
+            />
+
+            {/* --- MODAL INSTRUKSI PEMBAYARAN (VA/Transfer/QRIS) --- */}
+            <PaymentInstructionModal
+                show={showInstructionModal}
+                onClose={() => setShowInstructionModal(false)}
+                onFinishPayment={proceedToSuccessPage}
+                totalFinalDisplay={totalFinalDisplay}
+                paymentMethodName={paymentMethodName}
+                isLoading={isLoading}
+                methodKey={formData.metode}
             />
         </main>
     );
