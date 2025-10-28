@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import { getDB } from "../../lib/db";
 
-<<<<<<< HEAD
+
 // 🔹 Ambil semua template
 export async function GET() {
   try {
@@ -55,7 +55,7 @@ export async function POST(req) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-=======
+
 //===================================================================
 // METHOD GET: Mengambil daftar semua template
 //===================================================================
