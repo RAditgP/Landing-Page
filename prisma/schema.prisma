@@ -18,3 +18,20 @@ model Template {
   useUrl    String?
   createdAt DateTime @default(now())
 }
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  nama      String
+  email     String
+  paket     String
+  harga     String
+  metode    String
+  createdAt DateTime @default(now())
+}
+model PesanKontak {
+  id           String    @id @default(uuid()) // ID unik untuk pesan
+  namaLengkap  String
+  alamatEmail  String
+  pesanAnda    String
+  dibaca       Boolean   @default(false) // Status pesan, apakah sudah dibaca admin
+  dikirimPada  DateTime  @default(now()) // Waktu pengiriman
+}
