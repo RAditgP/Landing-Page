@@ -35,3 +35,11 @@ model PesanKontak {
   dibaca       Boolean   @default(false) // Status pesan, apakah sudah dibaca admin
   dikirimPada  DateTime  @default(now()) // Waktu pengiriman
 }
+model users {
+  id        Int      @id @default(autoincrement()) // ID unik, otomatis bertambah
+  email     String   @unique // Email harus unik untuk setiap pengguna
+  name      String
+  password  String // Simpan hash password, BUKAN password plain-text
+  createdAt DateTime @default(now()) // Waktu pembuatan pengguna
+  updatedAt DateTime @updatedAt // Waktu pembaruan terakhir
+}

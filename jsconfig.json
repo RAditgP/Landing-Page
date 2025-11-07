@@ -1,8 +1,10 @@
+// landing-page/jsconfig.json
 {
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"] // Ini mengarahkan '@/' ke folder 'src/' Anda
+      // Definisi alias: Semua yang dimulai dengan @/ akan dicari di folder ./src/
+      "@/*": ["./src/*"] 
     }
   }
 }
