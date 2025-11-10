@@ -1,11 +1,8 @@
 // src/lib/db.js
 import mysql from "mysql2/promise";
 
-let connection;
-
 /**
- * Koneksi database tunggal untuk mencegah duplikasi
- * (Next.js sering reload modul di mode development)
+ * Membuat koneksi database tunggal agar tidak duplikat
  */
 export async function getDB() {
   if (!global._dbConnection) {
@@ -13,9 +10,9 @@ export async function getDB() {
       host: "localhost",
       user: "root",
       password: "",
-      database: "landing_page_db", // sesuaikan dengan database kamu
+      database: "landing_page_db", // ganti sesuai nama database kamu
     });
+    console.log("✅ Database connected successfully!");
   }
-
   return global._dbConnection;
 }
