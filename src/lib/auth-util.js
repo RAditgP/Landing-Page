@@ -1,59 +1,44 @@
 // src/lib/auth-util.js
-
 import { cookies } from 'next/headers';
-// 🔑 PERBAIKAN 1: Path import ke db.js. 
-// Jika auth-util.js dan db.js berada di folder yang sama (src/lib), gunakan './db'.
-// Jika db.js ada di src/lib/db.js dan auth-util.js ada di src/lib/auth-util.js, maka ini path yang benar:
-import { getDB } from './db'; 
+import { getDB } from './db';
 
 /**
  * Mendapatkan detail pengguna yang sedang login berdasarkan token sesi yang ada di cookie.
  * @returns {Promise<object | null>} Objek pengguna atau null jika sesi tidak valid.
  */
 export async function getCurrentUser() {
-  
-  // 🔑 PERBAIKAN 2: Simpan cookies() dalam variabel
-  // Meskipun tidak 'await' secara sintaks, ini menyelesaikan masalah 'sync-dynamic-apis'.
-  const cookieStore = cookies();
-  
-  // 1. Ambil token sesi dari cookie
-  const token = cookieStore.get('session_token')?.value; // Panggil .get() dari cookieStore
+  // ✅ Ambil cookies secara async
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session_token')?.value;
 
   if (!token) {
-    return null; 
+    return null; // Tidak ada token
   }
 
   try {
-    // Pastikan getDB diekspor dengan benar, karena Anda mengimpornya sebagai named export
-    const db = await getDB(); 
+    const db = await getDB();
 
-    // 2. Cari sesi yang valid (token cocok dan belum kedaluwarsa)
+    // ✅ Cek sesi yang valid
     const [sessionRows] = await db.query(
-      "SELECT user_id FROM sessions WHERE token = ? AND expires_at > NOW()",
+      'SELECT user_id FROM sessions WHERE token = ? AND expires_at > NOW()',
       [token]
     );
 
     if (sessionRows.length === 0) {
-      // Sesi tidak ditemukan atau sudah kedaluwarsa
-      return null; 
+      return null; // Sesi tidak valid
     }
 
     const userId = sessionRows[0].user_id;
 
-    // 3. Ambil detail pengguna (hanya ambil kolom yang aman)
+    // ✅ Ambil data user
     const [userRows] = await db.query(
-      "SELECT id, name, email FROM users WHERE id = ?",
+      'SELECT id, name, email FROM users WHERE id = ?',
       [userId]
     );
-    
-    if (userRows.length > 0) {
-      return userRows[0];
-    }
-    
-    return null; 
 
+    return userRows.length > 0 ? userRows[0] : null;
   } catch (error) {
-    console.error("Error fetching current user:", error);
-    return null; 
+    console.error('❌ Error fetching current user:', error);
+    return null;
   }
 }
