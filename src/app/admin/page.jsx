@@ -1,30 +1,72 @@
+"use client";
+import { useEffect, useState } from "react";
+import StatCard from "../components/StatCard";
+import ActivityList from "../components/ActivityList";
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
+} from "recharts";
+
 export default function AdminDashboard() {
+  const [stats, setStats] = useState({ templates:0, messages:0, users:0 });
+  const [activity, setActivity] = useState({ templates: [], messages: [], trend: [] });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function getData() {
+      try {
+        const [sRes, aRes] = await Promise.all([
+          fetch("/api/admin/stats"),
+          fetch("/api/admin/activity")
+        ]);
+        if (!sRes.ok) throw new Error("Gagal ambil stats");
+        if (!aRes.ok) throw new Error("Gagal ambil activity");
+
+        const s = await sRes.json();
+        const a = await aRes.json();
+        setStats(s);
+        setActivity(a);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    getData();
+  }, []);
+
   return (
     <div>
-      <h1 className="text-3xl font-extrabold mb-8 text-white">
-        Dashboard Admin ✨
-      </h1>
+      <h1 className="text-2xl font-bold mb-6">Dashboard Admin</h1>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-[#1e293b] border border-gray-700 rounded-2xl p-6 shadow-lg hover:border-indigo-500 transition">
-          <h2 className="text-gray-300 font-medium">Jumlah Template</h2>
-          <p className="text-4xl font-bold text-indigo-400 mt-3">12</p>
-        </div>
-
-        <div className="bg-[#1e293b] border border-gray-700 rounded-2xl p-6 shadow-lg hover:border-indigo-500 transition">
-          <h2 className="text-gray-300 font-medium">User Aktif</h2>
-          <p className="text-4xl font-bold text-indigo-400 mt-3">5</p>
-        </div>
-
-        <div className="bg-[#1e293b] border border-gray-700 rounded-2xl p-6 shadow-lg hover:border-indigo-500 transition">
-          <h2 className="text-gray-300 font-medium">Kunjungan Hari Ini</h2>
-          <p className="text-4xl font-bold text-indigo-400 mt-3">28</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <StatCard title="Total Template" value={stats.templates} />
+        <StatCard title="Pesan Masuk" value={stats.messages} />
+        <StatCard title="Total Pengguna" value={stats.users} />
       </div>
 
-      <footer className="mt-12 text-gray-500 text-sm border-t border-gray-700 pt-6">
-        © 2025 DevLaunch. Dibangun dengan ❤️ oleh Tim Rayyan.
-      </footer>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white/5 p-4 rounded-xl">
+          <h3 className="text-lg font-semibold mb-3">Tren Pendaftaran Pengguna (7 hari)</h3>
+          {loading ? (
+            <div>Loading chart...</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={activity.trend}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="count" stroke="#6366F1" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className="bg-white/5 p-4 rounded-xl">
+          <h3 className="text-lg font-semibold mb-3">Aktivitas Terbaru</h3>
+          {loading ? <div>Loading...</div> : <ActivityList templates={activity.templates} messages={activity.messages} />}
+        </div>
+      </div>
     </div>
   );
 }
