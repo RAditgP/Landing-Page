@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Key, LogIn, UserPlus, Github, Globe } from "lucide-react";
+import { Mail, Key, LogIn, UserPlus, Github, Globe, ArrowLeft } from "lucide-react"; // ✅ Import ArrowLeft
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -26,9 +26,9 @@ export default function LoginPage() {
 
       if (!res.ok) throw new Error(data.message || "Login gagal");
 
+      // Catatan: Gunakan Firestore untuk penyimpanan persisten di aplikasi nyata.
+      // localStorage hanya untuk demo atau pengembangan lokal.
       alert(`✅ ${data.message} — Selamat datang, ${data.user.email}!`);
-
-      // Simpan user di localStorage (opsional)
       localStorage.setItem("user", JSON.stringify(data.user));
 
       // ✅ Redirect ke halaman utama setelah login sukses
@@ -42,9 +42,15 @@ export default function LoginPage() {
 
   return (
     <div className="bg-gray-900 min-h-screen flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
+      <div className="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700 relative"> {/* ✅ Tambahkan relative */}
+        
+        {/* ✅ TOMBOL KEMBALI */}
+        <Link href="/" className="absolute top-4 left-4 p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition duration-200" title="Kembali ke Beranda">
+          <ArrowLeft size={24} />
+        </Link>
+        
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 mt-6"> {/* ✅ Tambahkan margin-top untuk memberi ruang tombol kembali */}
           <LogIn size={36} className="mx-auto text-green-400 mb-3" />
           <h1 className="text-3xl font-bold text-white mb-2">
             Masuk ke Akun Anda

@@ -1,25 +1,33 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // ✅ Tambahkan ini
-import { Mail, Key, UserPlus, LogIn, Github, Globe } from "lucide-react";
+import { useRouter } from "next/navigation"; 
+import { Mail, Key, User, UserPlus, LogIn, Github, Globe, ArrowLeft } from "lucide-react"; // ✅ Import ArrowLeft
 
 export default function RegisterPage() {
-  const router = useRouter(); // ✅ Router untuk redirect
+  const router = useRouter(); 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); 
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      alert("❌ Kata Sandi dan Konfirmasi Kata Sandi tidak cocok.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // 🔹 Kirim data ke API register
+      // 🔹 Kirim data NAMA, EMAIL, dan PASSWORD ke API register
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password }),
       });
 
       const data = await res.json();
@@ -40,9 +48,15 @@ export default function RegisterPage() {
 
   return (
     <div className="bg-gray-900 min-h-screen pt-24 pb-12 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-gray-800 p-8 md:p-10 rounded-xl shadow-2xl border border-gray-700">
+      <div className="w-full max-w-md bg-gray-800 p-8 md:p-10 rounded-xl shadow-2xl border border-gray-700 relative"> {/* ✅ Tambahkan relative untuk posisi tombol */}
+        
+        {/* ✅ TOMBOL KEMBALI */}
+        <Link href="/" className="absolute top-4 left-4 p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition duration-200" title="Kembali ke Beranda">
+          <ArrowLeft size={24} />
+        </Link>
+        
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 mt-6"> {/* ✅ Tambahkan margin-top untuk memberi ruang tombol kembali */}
           <div className="flex justify-center mb-4">
             <UserPlus size={36} className="text-blue-400" />
           </div>
@@ -76,6 +90,26 @@ export default function RegisterPage() {
 
         {/* Form Email/Password */}
         <form onSubmit={handleRegister}>
+          
+          {/* INPUT BARU: Nama Lengkap */}
+          <div className="mb-4">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
+              <User size={16} className="inline mr-1 text-blue-400" /> Nama Lengkap
+            </label>
+            <input
+              type="text"
+              id="name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              placeholder="Masukkan nama lengkap Anda"
+            />
+          </div>
+
           <div className="mb-4">
             <label
               htmlFor="email"
@@ -94,7 +128,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="mb-6">
+          <div className="mb-4">
             <label
               htmlFor="password"
               className="block text-sm font-medium text-gray-300 mb-2"
@@ -112,10 +146,29 @@ export default function RegisterPage() {
               placeholder="Minimal 6 karakter"
             />
           </div>
+          
+          {/* INPUT BARU: Konfirmasi Kata Sandi */}
+          <div className="mb-6"> 
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
+              <Key size={16} className="inline mr-1 text-blue-400" /> Konfirmasi Kata Sandi
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              placeholder="Ulangi kata sandi"
+            />
+          </div>
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || password !== confirmPassword || password.length < 6 || name.length === 0}
             className="w-full bg-green-500 text-gray-900 font-bold py-3 rounded-lg shadow-lg hover:bg-green-400 transition duration-300 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed"
           >
             {isLoading ? "Memproses..." : "Buat Akun DevLaunch"}
