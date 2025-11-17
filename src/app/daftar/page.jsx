@@ -1,20 +1,22 @@
 "use client";
+
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation"; 
-import { Mail, Key, User, UserPlus, LogIn, Github, Globe, ArrowLeft } from "lucide-react"; // ✅ Import ArrowLeft
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { Mail, Key, User, UserPlus, LogIn, Github, Globe, ArrowLeft } from "lucide-react";
 
 export default function RegisterPage() {
-  const router = useRouter(); 
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); 
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       alert("❌ Kata Sandi dan Konfirmasi Kata Sandi tidak cocok.");
       return;
@@ -23,7 +25,6 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // 🔹 Kirim data NAMA, EMAIL, dan PASSWORD ke API register
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -35,8 +36,6 @@ export default function RegisterPage() {
       if (!res.ok) throw new Error(data.message || "Gagal mendaftar");
 
       alert("✅ Pendaftaran Berhasil! Silakan login.");
-
-      // 🔹 Redirect ke halaman login
       router.push("/login");
 
     } catch (err) {
@@ -48,15 +47,17 @@ export default function RegisterPage() {
 
   return (
     <div className="bg-gray-900 min-h-screen pt-24 pb-12 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-gray-800 p-8 md:p-10 rounded-xl shadow-2xl border border-gray-700 relative"> {/* ✅ Tambahkan relative untuk posisi tombol */}
-        
-        {/* ✅ TOMBOL KEMBALI */}
-        <Link href="/" className="absolute top-4 left-4 p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition duration-200" title="Kembali ke Beranda">
+      <div className="w-full max-w-md bg-gray-800 p-8 md:p-10 rounded-xl shadow-2xl border border-gray-700 relative">
+
+        {/* Tombol Kembali */}
+        <Link
+          href="/"
+          className="absolute top-4 left-4 p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition duration-200"
+        >
           <ArrowLeft size={24} />
         </Link>
-        
-        {/* Header */}
-        <div className="text-center mb-8 mt-6"> {/* ✅ Tambahkan margin-top untuk memberi ruang tombol kembali */}
+
+        <div className="text-center mb-8 mt-6">
           <div className="flex justify-center mb-4">
             <UserPlus size={36} className="text-blue-400" />
           </div>
@@ -68,40 +69,39 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {/* Social Login */}
+        {/* Tombol Social Login */}
         <div className="flex flex-col gap-3 mb-6">
-          <button className="w-full flex items-center justify-center bg-white hover:bg-gray-200 text-gray-900 font-semibold py-2.5 px-4 rounded-lg transition duration-200 border border-gray-300">
+          <button
+            onClick={() => signIn("google")}
+            className="w-full flex items-center justify-center bg-white hover:bg-gray-200 text-gray-900 font-semibold py-2.5 px-4 rounded-lg transition duration-200 border border-gray-300"
+          >
             <Globe size={20} className="mr-2" />
             Daftar dengan Google
           </button>
 
-          <button className="w-full flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2.5 px-4 rounded-lg transition duration-200 border border-gray-600">
+          <button
+            onClick={() => signIn("github")}
+            className="w-full flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2.5 px-4 rounded-lg transition duration-200 border border-gray-600"
+          >
             <Github size={20} className="mr-2" />
             Daftar dengan GitHub
           </button>
         </div>
 
-        {/* Divider */}
         <div className="flex items-center mb-6">
           <div className="flex-grow border-t border-gray-700"></div>
           <span className="flex-shrink mx-4 text-gray-500 text-sm">ATAU</span>
           <div className="flex-grow border-t border-gray-700"></div>
         </div>
 
-        {/* Form Email/Password */}
         <form onSubmit={handleRegister}>
-          
-          {/* INPUT BARU: Nama Lengkap */}
+          {/* Nama */}
           <div className="mb-4">
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               <User size={16} className="inline mr-1 text-blue-400" /> Nama Lengkap
             </label>
             <input
               type="text"
-              id="name"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -110,16 +110,13 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Email */}
           <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               <Mail size={16} className="inline mr-1 text-blue-400" /> Alamat Email
             </label>
             <input
               type="email"
-              id="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -128,16 +125,13 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Password */}
           <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               <Key size={16} className="inline mr-1 text-blue-400" /> Kata Sandi
             </label>
             <input
               type="password"
-              id="password"
               required
               minLength={6}
               value={password}
@@ -146,18 +140,14 @@ export default function RegisterPage() {
               placeholder="Minimal 6 karakter"
             />
           </div>
-          
-          {/* INPUT BARU: Konfirmasi Kata Sandi */}
-          <div className="mb-6"> 
-            <label
-              htmlFor="confirmPassword"
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
+
+          {/* Konfirmasi Password */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               <Key size={16} className="inline mr-1 text-blue-400" /> Konfirmasi Kata Sandi
             </label>
             <input
               type="password"
-              id="confirmPassword"
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -175,7 +165,6 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-6">
           Sudah punya akun?
           <Link
@@ -197,6 +186,7 @@ export default function RegisterPage() {
           </Link>
           kami.
         </p>
+
       </div>
     </div>
   );

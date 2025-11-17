@@ -9,7 +9,7 @@ import { getCurrentUser } from '@/lib/auth-util';
 // Pastikan path ini sesuai jika Anda menempatkannya di 'src/components/'
 import ProfileManagement from '@/app/components/ProfileManagement.jsx';
 import Link from 'next/link';
-import { LogOut } from 'lucide-react';
+import { LogOut,ArrowLeft } from 'lucide-react';
 
 export default async function DashboardPage() {
   // 1. Otorisasi dan Ambil Data Pengguna
@@ -32,7 +32,14 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-lg bg-gray-800 p-8 md:p-10 rounded-xl shadow-2xl border border-gray-700 relative mt-8 mb-8">
-        
+        {/* Tombol Kembali */}
+        <Link
+          href="/"
+          className="absolute top-4 left-4 p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition duration-200"
+          title="Kembali ke Beranda"
+        >
+          <ArrowLeft size={24} />
+        </Link>
         {/* Header Dashboard */}
         <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-white mb-1">Pengaturan Profil</h1>

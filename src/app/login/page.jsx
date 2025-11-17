@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Key, LogIn, UserPlus, Github, Globe, ArrowLeft } from "lucide-react"; // ✅ Import ArrowLeft
+import { Mail, Key, LogIn, UserPlus, Github, Globe, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -26,12 +26,11 @@ export default function LoginPage() {
 
       if (!res.ok) throw new Error(data.message || "Login gagal");
 
-      // Catatan: Gunakan Firestore untuk penyimpanan persisten di aplikasi nyata.
-      // localStorage hanya untuk demo atau pengembangan lokal.
       alert(`✅ ${data.message} — Selamat datang, ${data.user.email}!`);
+
+      // Simpan user (non-persisten)
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      // ✅ Redirect ke halaman utama setelah login sukses
       router.push("/");
     } catch (err) {
       alert(`❌ ${err.message}`);
@@ -41,16 +40,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700 relative"> {/* ✅ Tambahkan relative */}
-        
-        {/* ✅ TOMBOL KEMBALI */}
-        <Link href="/" className="absolute top-4 left-4 p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition duration-200" title="Kembali ke Beranda">
+    <div className="bg-gray-900 min-h-screen flex items-center justify-center px-4 py-20">
+      <div className="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700 relative">
+
+        {/* Tombol Kembali */}
+        <Link
+          href="/"
+          className="absolute top-4 left-4 p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition duration-200"
+          title="Kembali ke Beranda"
+        >
           <ArrowLeft size={24} />
         </Link>
-        
+
         {/* Header */}
-        <div className="text-center mb-8 mt-6"> {/* ✅ Tambahkan margin-top untuk memberi ruang tombol kembali */}
+        <div className="text-center mb-8 mt-6">
           <LogIn size={36} className="mx-auto text-green-400 mb-3" />
           <h1 className="text-3xl font-bold text-white mb-2">
             Masuk ke Akun Anda
@@ -60,7 +63,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Login Sosial */}
+        {/* Social Login */}
         <div className="flex flex-col gap-3 mb-6">
           <button
             type="button"
@@ -69,6 +72,7 @@ export default function LoginPage() {
             <Globe size={20} className="mr-2" />
             Masuk dengan Google
           </button>
+
           <button
             type="button"
             className="w-full flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2.5 rounded-lg transition border border-gray-600"
@@ -87,17 +91,15 @@ export default function LoginPage() {
 
         {/* Form Login */}
         <form onSubmit={handleLogin}>
+          
+          {/* Email */}
           <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               <Mail size={16} className="inline mr-1 text-blue-400" />
               Alamat Email
             </label>
             <input
               type="email"
-              id="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -106,18 +108,16 @@ export default function LoginPage() {
             />
           </div>
 
+          {/* Password */}
           <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               <Key size={16} className="inline mr-1 text-blue-400" />
               Kata Sandi
             </label>
             <input
               type="password"
-              id="password"
               required
+              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
@@ -125,6 +125,7 @@ export default function LoginPage() {
             />
           </div>
 
+          {/* Lupa password */}
           <div className="flex justify-end mb-6">
             <Link
               href="/lupa-sandi"
@@ -134,6 +135,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
+          {/* Tombol Login */}
           <button
             type="submit"
             disabled={isLoading}
@@ -143,6 +145,7 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {/* Link Daftar */}
         <p className="text-center text-sm text-gray-500 mt-6">
           Belum punya akun?
           <Link
@@ -152,6 +155,7 @@ export default function LoginPage() {
             <UserPlus size={16} className="inline mr-1" /> Daftar Gratis
           </Link>
         </p>
+
       </div>
     </div>
   );
