@@ -1,15 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 
-import { getDB as db } from '../../../lib/db.js';
-
-
+const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    
-    const pesan = await db.PesanKontak.findMany({ 
+    const pesan = await prisma.pesankontak.findMany({
       orderBy: {
-        dikirimPada: 'desc', 
+        dikirimPada: "desc",
       },
     });
 
@@ -17,7 +15,7 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching admin messages:", error);
     return NextResponse.json(
-      { message: 'Gagal mengambil data pesan dari server.' },
+      { message: "Gagal mengambil data pesan dari server." },
       { status: 500 }
     );
   }

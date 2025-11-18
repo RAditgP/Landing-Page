@@ -1,42 +1,28 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import moment from 'moment'; // Pastikan Anda menginstal moment.js (npm install moment) atau gunakan Date bawaan
-// import AdminLayout from '@/components/AdminLayout'; // Asumsi Anda memiliki layout admin
-import AdminLayout from '../layout';
-// Tipe data untuk pesan (opsional, untuk TypeScript, tapi membantu di JS juga)
-// Sesuaikan dengan skema Prisma Anda
-const initialMessage = {
-  id: '',
-  namaLengkap: '',
-  alamatEmail: '',
-  pesanAnda: '',
-  dibaca: false,
-  dikirimPada: '',
-};
+import moment from 'moment';
+import { Mail } from 'lucide-react';
 
 export default function AdminPesanPage() {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 1. FUNGSI UNTUK MENGAMBIL DATA PESAN
   const fetchMessages = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
     try {
-      // Panggil API Route GET yang sudah Anda buat di /app/api/admin/pesan/route.js
-      const response = await fetch('/api/admin/pesan'); 
-      
+      const response = await fetch('/api/admin/pesan');
+
       if (!response.ok) {
         throw new Error('Gagal mengambil data pesan dari server.');
       }
-      
-      const data = await response.json();
-      setMessages(data);
+
+      setMessages(await response.json());
     } catch (err) {
       setError(err.message);
-      console.error('Error fetching messages:', err);
     } finally {
       setIsLoading(false);
     }
@@ -46,125 +32,79 @@ export default function AdminPesanPage() {
     fetchMessages();
   }, [fetchMessages]);
 
-
-  // 2. FUNGSI UNTUK MENANDAI PESAN SEBAGAI SUDAH DIBACA
-  const handleMarkAsRead = async (id) => {
-    // Optimistic UI Update: Ubah status di state lokal segera, sebelum menunggu respons server
-    setMessages(prev => 
-      prev.map(msg => 
-        msg.id === id ? { ...msg, dibaca: true } : msg
-      )
-    );
-
-    try {
-      // Panggil API Route untuk update status (Anda harus membuat API ini, misalnya menggunakan PATCH)
-      const response = await fetch(`/api/admin/pesan/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dibaca: true }),
-      });
-
-      if (!response.ok) {
-        // Jika gagal, kembalikan status di UI (pessimistic update)
-        alert('Gagal memperbarui status pesan di database.');
-        fetchMessages(); // Ambil ulang data untuk sinkronisasi
-      }
-    } catch (error) {
-      alert('Terjadi error koneksi saat update status.');
-      console.error('Error marking as read:', error);
-      fetchMessages(); // Ambil ulang data
-    }
-  };
-
-  
-  // ================= TAMPILAN (RENDER) =================
-  
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="text-white text-center py-10">Memuat Pesan...</div>
-      </AdminLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <AdminLayout>
-        <div className="text-red-400 text-center py-10">Error: {error}</div>
-      </AdminLayout>
-    );
-  }
-
   return (
-    // <AdminLayout> // Hapus komentar ini jika Anda menggunakan layout admin
-    <div className="bg-gray-900 min-h-screen p-8 text-white">
-      <h1 className="text-3xl font-bold mb-8 text-blue-400">Dashboard Pesan Masuk</h1>
-      
-      {messages.length === 0 ? (
-        <div className="bg-gray-800 p-6 rounded-lg text-center text-gray-400">
-          Tidak ada pesan kontak baru.
-        </div>
-      ) : (
-        <div className="overflow-x-auto bg-gray-800 rounded-lg shadow-xl">
-          <table className="min-w-full divide-y divide-gray-700">
-            <thead className="bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Waktu Kirim</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nama</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Pesan</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800">
-              {messages.map((message) => (
-                <tr key={message.id} className={message.dibaca ? 'bg-gray-900/50' : 'bg-gray-800 hover:bg-gray-700 transition'}>
-                  {/* Status */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      message.dibaca ? 'bg-gray-600 text-gray-300' : 'bg-blue-600 text-white'
-                    }`}>
-                      {message.dibaca ? 'Sudah Dibaca' : 'Baru'}
-                    </span>
-                  </td>
-                  
-                  {/* Waktu Kirim */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                    {moment(message.dikirimPada).format('DD MMM YY, HH:mm')}
-                  </td>
-                  
-                  {/* Nama */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{message.namaLengkap}</td>
-                  
-                  {/* Email */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-400">
-                    <a href={`mailto:${message.alamatEmail}`}>{message.alamatEmail}</a>
-                  </td>
-                  
-                  {/* Pesan (Potongan) */}
-                  <td className="px-6 py-4 text-sm text-gray-300 max-w-xs truncate">
-                    {message.pesanAnda.substring(0, 50)}...
-                  </td>
-                  
-                  {/* Aksi */}
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    {!message.dibaca && (
-                      <button
-                        onClick={() => handleMarkAsRead(message.id)}
-                        className="text-green-400 hover:text-green-600 transition"
-                      >
-                        Tandai Dibaca
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div className="min-h-screen w-full p-8 bg-gradient-to-br from-[#0a0f1f] via-[#0d1326] to-[#11182c] text-white">
+
+      <div className="mb-10">
+        <h1 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-400 to-blue-500 text-transparent bg-clip-text">
+          Pesan Masuk
+        </h1>
+        <p className="mt-1 text-gray-400">Lihat semua pesan dari pengunjung website anda</p>
+      </div>
+
+      {isLoading && (
+        <div className="text-center py-10">
+          <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-gray-400 mt-3">Sedang memuat pesan...</p>
         </div>
       )}
+
+      {error && (
+        <div className="text-center text-red-400 py-6 bg-red-900/20 border border-red-600 rounded-xl">
+          Error: {error}
+        </div>
+      )}
+
+      {!isLoading && messages.length === 0 && (
+        <div className="max-w-xl mx-auto mt-10 bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-10 text-center shadow-xl">
+          <Mail className="h-16 w-16 mx-auto text-gray-500 opacity-70" />
+          <h3 className="text-lg text-gray-300 mt-4">Tidak ada pesan kontak baru</h3>
+          <p className="text-gray-500 text-sm mt-1">Pesan dari pengunjung akan muncul di sini</p>
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-8 mt-6">
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className="p-6 rounded-2xl bg-white/10 shadow-lg 
+            backdrop-blur-xl border border-white/10
+            transition transform hover:scale-[1.02] hover:shadow-2xl"
+          >
+            <div className="flex justify-between items-center mb-3">
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold shadow 
+                ${msg.dibaca ? 'bg-gray-600 text-gray-300' : 'bg-indigo-600 text-white'}`}
+              >
+                {msg.dibaca ? 'Sudah Dibaca' : 'Baru'}
+              </span>
+
+              <span className="text-sm text-gray-400">
+                {moment(msg.dikirimPada).format('DD MMM YYYY • HH:mm')}
+              </span>
+            </div>
+
+            <h2 className="text-2xl font-bold text-white">{msg.namaLengkap}</h2>
+
+            <a
+              href={`mailto:${msg.alamatEmail}`}
+              className="text-indigo-400 hover:underline text-sm"
+            >
+              {msg.alamatEmail}
+            </a>
+
+            <p className="mt-4 text-gray-300 leading-relaxed whitespace-pre-line">
+              {msg.pesanAnda}
+            </p>
+
+            {!msg.dibaca && (
+              <button className="mt-5 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-semibold transition duration-200 shadow">
+                Tandai Dibaca
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
-    // </AdminLayout>
   );
 }

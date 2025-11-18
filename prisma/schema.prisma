@@ -27,7 +27,7 @@ model users {
 }
 
 model pesankontak {
-  id          String   @id
+  id          String   @id @default(uuid())
   namaLengkap String
   alamatEmail String
   pesanAnda   String
@@ -56,3 +56,4 @@ model transaction {
   metode    String
   createdAt DateTime @default(now())
 }
+
