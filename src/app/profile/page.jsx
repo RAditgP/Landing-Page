@@ -3,7 +3,7 @@
 
 import { redirect } from 'next/navigation';
 // Asumsi path dan fungsi ini sudah ada dan berfungsi
-import { getCurrentUser } from '@/lib/auth-util'; 
+import { getCurrentUser } from '@/lib/auth'; 
 
 // Import komponen Client Profile Management
 // Pastikan path ini sesuai jika Anda menempatkannya di 'src/components/'
@@ -52,11 +52,7 @@ export default async function DashboardPage() {
         
         {/* Tombol Logout Sisi Server (Fallback) */}
         {/* Anda bisa menggunakan tombol Logout di dalam ProfileManagement untuk interaksi client-side */}
-        <form action="/api/auth/logout" method="POST" className="mt-8 text-center hidden">
-          <button type="submit" className="text-gray-400 hover:text-red-400 transition text-sm flex items-center justify-center mx-auto">
-            <LogOut size={16} className="mr-1"/> Logout Sisi Server
-          </button>
-        </form>
+        
 
       </div>
     </main>
