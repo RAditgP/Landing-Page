@@ -1,237 +1,430 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { Edit3, Trash2, Save, X, Search } from "lucide-react";
 
-export default function AdminTemplates() {
+export default function AdminTemplatesPage() {
+  const [templates, setTemplates] = useState([]);
+  const [filteredTemplates, setFilteredTemplates] = useState([]);
   const [form, setForm] = useState({
+    id: "",
     name: "",
+    category: "",
     description: "",
-    category: "Personal",
+    tag: "",
+    demoUrl: "",
+    useUrl: "",
     image: null,
+    oldImage: "",
   });
   const [preview, setPreview] = useState(null);
-  const [message, setMessage] = useState("");
-  const [templates, setTemplates] = useState([]);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
 
-  const categories = ["Personal", "Bisnis", "Portfolio", "Aplikasi", "Lainnya"];
+  // Daftar kategori tetap
+  const categories = [
+    "Landing Page",
+    "Portfolio",
+    "Bisnis",
+    "Toko Online",
+    "Blog",
+    "Company Profile",
+  ];
 
-  // 🔹 Fetch data template
+  // =======================
+  // Fetch data
+  // =======================
+  async function fetchTemplates() {
+    try {
+      const res = await fetch("/api/templates");
+      const data = await res.json();
+      const arr = Array.isArray(data) ? data : [];
+
+      setTemplates(arr);
+      setFilteredTemplates(arr);
+    } catch (err) {
+      console.error(err);
+      alert("Gagal mengambil data template");
+    }
+  }
+
   useEffect(() => {
     fetchTemplates();
   }, []);
 
-  const fetchTemplates = async () => {
-    try {
-      const res = await fetch("/api/templates");
-      if (!res.ok) throw new Error("Gagal memuat template");
-      const data = await res.json();
-      setTemplates(data);
-    } catch (err) {
-      setMessage("❌ Tidak dapat memuat template dari server");
-    }
-  };
-
+  // =======================
+  // Handle Input
+  // =======================
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === "image" && files?.[0]) {
-      const file = files[0];
-      setForm((prev) => ({ ...prev, image: file }));
-      setPreview(URL.createObjectURL(file));
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
-    }
-  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.name || !form.description) {
-      setMessage("⚠️ Semua field wajib diisi!");
+    if (name === "image") {
+      const file = files?.[0];
+      if (file) {
+        setForm({ ...form, image: file });
+        setPreview(URL.createObjectURL(file));
+      }
       return;
     }
 
-    try {
-      setMessage("⏳ Mengupload...");
-      const formData = new FormData();
-      formData.append("name", form.name);
-      formData.append("description", form.description);
-      formData.append("category", form.category);
-      if (form.image) formData.append("image", form.image);
+    setForm({ ...form, [name]: value });
+  };
 
+  // =======================
+  // Submit (Tambah / Update)
+  // =======================
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+
+    const method = editing ? "PUT" : "POST";
+    const formData = new FormData();
+
+    // append semua form
+    Object.keys(form).forEach((key) => {
+      if (form[key] !== null && form[key] !== undefined)
+        formData.append(key, form[key]);
+    });
+
+    // Kirim ke API
+    try {
       const res = await fetch("/api/templates", {
-        method: "POST",
+        method,
         body: formData,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload gagal");
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Gagal menyimpan data");
 
-      setMessage("✅ Template berhasil ditambahkan!");
-      setForm({ name: "", description: "", category: "Personal", image: null });
+      alert(editing ? "Template berhasil diperbarui!" : "Template berhasil ditambahkan!");
+
+      // reset form
+      setForm({
+        id: "",
+        name: "",
+        category: "",
+        description: "",
+        tag: "",
+        demoUrl: "",
+        useUrl: "",
+        image: null,
+        oldImage: "",
+      });
       setPreview(null);
+      setEditing(false);
+
       fetchTemplates();
     } catch (err) {
-      setMessage(`❌ Terjadi kesalahan: ${err.message}`);
+      alert(err.message);
+    }
+
+    setLoading(false);
+  }
+
+  // =======================
+  // Edit Template
+  // =======================
+  const handleEdit = (tpl) => {
+    setEditing(true);
+    setForm({
+      ...tpl,
+      image: null,
+      oldImage: tpl.image, // SIMPAN FOTO LAMA
+    });
+    setPreview(tpl.image);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // =======================
+  // Batal Edit
+  // =======================
+  const cancelEdit = () => {
+    setEditing(false);
+    setForm({
+      id: "",
+      name: "",
+      category: "",
+      description: "",
+      tag: "",
+      demoUrl: "",
+      useUrl: "",
+      image: null,
+      oldImage: "",
+    });
+    setPreview(null);
+  };
+
+  // =======================
+  // Delete
+  // =======================
+  const handleDelete = async (id) => {
+    if (!confirm("Yakin ingin menghapus template ini?")) return;
+
+    try {
+      const res = await fetch("/api/templates", {
+        method: "DELETE",
+        body: JSON.stringify({ id }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await res.json();
+      alert(result.message);
+      fetchTemplates();
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  return (
-    <div className="text-white pb-20">
-      <h1 className="text-3xl font-extrabold mb-8">Kelola Template ⚙️</h1>
+  // =======================
+  // Search & Filter
+  // =======================
+  useEffect(() => {
+    let data = templates;
 
-      {/* 🔹 Form Tambah Template */}
+    if (search) {
+      data = data.filter((t) =>
+        t.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    if (filterCategory) {
+      data = data.filter((t) => t.category === filterCategory);
+    }
+
+    setFilteredTemplates(data);
+  }, [search, filterCategory, templates]);
+
+  // =======================
+  // UI
+  // =======================
+  return (
+    <div className="min-h-screen bg-white p-8 text-gray-900">
+      <h1 className="text-3xl font-bold mb-6 text-center text-indigo-700">
+        Kelola Template
+      </h1>
+
+      {/* FORM */}
       <form
         onSubmit={handleSubmit}
-        className="bg-[#1e293b] border border-gray-700 p-6 rounded-2xl shadow-lg mb-10"
-        encType="multipart/form-data"
+        className="bg-gray-50 p-6 rounded-xl shadow-md border mb-8"
       >
-        <div className="grid gap-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Nama Template"
-            value={form.name}
-            onChange={handleChange}
-            className="bg-[#0f172a] border border-gray-700 p-3 rounded-lg focus:border-indigo-500 outline-none"
-          />
-          <textarea
-            name="description"
-            placeholder="Deskripsi Template"
-            value={form.description}
-            onChange={handleChange}
-            className="bg-[#0f172a] border border-gray-700 p-3 rounded-lg h-24 resize-none focus:border-indigo-500 outline-none"
-          />
+        <h2 className="text-xl font-semibold mb-4">
+          {editing ? "✏️ Edit Template" : "➕ Tambah Template"}
+        </h2>
 
-          {/* 🔹 Dropdown kategori */}
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className="bg-[#0f172a] border border-gray-700 p-3 rounded-lg focus:border-indigo-500 outline-none"
-          >
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label>Nama Template</label>
+            <input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              required
+              className="w-full mt-1 p-2 border rounded-md"
+            />
+          </div>
 
-          {/* 🔹 Upload Gambar */}
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            onChange={handleChange}
-            className="bg-[#0f172a] border border-gray-700 p-3 rounded-lg"
-          />
-
-          {preview && (
-            <div className="mt-2">
-              <p className="text-gray-400 text-sm mb-1">Preview Gambar:</p>
-              <img
-                src={preview}
-                alt="Preview"
-                className="rounded-xl w-full h-48 object-cover border border-gray-700"
-              />
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 py-2 rounded-lg font-semibold transition"
-          >
-            Simpan Template
-          </button>
-        </div>
-        {message && <p className="mt-3 text-gray-300">{message}</p>}
-      </form>
-
-      {/* 🔹 Daftar Template */}
-      <h2 className="text-2xl font-semibold mb-4 text-indigo-400">Daftar Template</h2>
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-        {templates.length > 0 ? (
-          templates.map((tpl) => (
-            <div
-              key={tpl.id}
-              className="bg-[#1e293b] border border-gray-700 rounded-xl shadow-lg hover:border-indigo-500 transition overflow-hidden"
+          <div>
+            <label>Kategori</label>
+            <select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              required
+              className="w-full mt-1 p-2 border rounded-md"
             >
-              {tpl.image && (
-                <img
-                  src={tpl.image}
-                  alt={tpl.name}
-                  className="w-full h-40 object-cover"
-                />
-              )}
-              <div className="p-4">
-                <span className="text-xs bg-indigo-600 px-2 py-1 rounded-full">
-                  {tpl.category}
-                </span>
-                <h3 className="text-lg font-semibold mt-2 text-indigo-300">
-                  {tpl.name}
-                </h3>
-                <p className="text-gray-400 text-sm line-clamp-2">
-                  {tpl.description}
-                </p>
-                <button
-                  onClick={() => setSelectedTemplate(tpl)}
-                  className="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 py-1 rounded-lg text-sm font-medium"
-                >
-                  Lihat Detail
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-400 text-center col-span-full">
-            Belum ada template yang ditambahkan.
-          </p>
-        )}
-      </div>
-
-      {/* 🔹 Modal Detail */}
-      {selectedTemplate && (
-        <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
-          <div className="bg-[#1e293b] p-6 rounded-2xl shadow-2xl max-w-xl w-[90%] relative">
-            <button
-              onClick={() => setSelectedTemplate(null)}
-              className="absolute top-3 right-4 text-gray-400 hover:text-white text-2xl"
-            >
-              ✕
-            </button>
-
-            {selectedTemplate.image && (
-              <img
-                src={selectedTemplate.image}
-                alt={selectedTemplate.name}
-                className="rounded-lg mb-4 w-full h-60 object-cover border border-gray-700"
-              />
-            )}
-
-            <span className="text-sm bg-indigo-600 px-3 py-1 rounded-full">
-              {selectedTemplate.category}
-            </span>
-            <h2 className="text-2xl font-bold text-indigo-400 mt-3">
-              {selectedTemplate.name}
-            </h2>
-            <p className="text-gray-300 mt-2 whitespace-pre-line">
-              {selectedTemplate.description}
-            </p>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => setSelectedTemplate(null)}
-                className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm"
-              >
-                Tutup
-              </button>
-              <button
-                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm"
-              >
-                Lihat Template
-              </button>
-            </div>
+              <option value="">Pilih kategori</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-      )}
+
+        <div className="mt-4">
+          <label>Deskripsi</label>
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            rows={3}
+            className="w-full mt-1 p-2 border rounded-md"
+          />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label>Tag</label>
+            <input
+              name="tag"
+              value={form.tag}
+              onChange={handleChange}
+              className="w-full mt-1 p-2 border rounded-md"
+            />
+          </div>
+
+          <div>
+            <label>Gambar Preview</label>
+            <input
+              type="file"
+              accept="image/*"
+              name="image"
+              onChange={handleChange}
+              className="w-full mt-1 p-2 border rounded-md"
+            />
+
+            {preview && (
+              <Image
+                src={preview}
+                alt="preview"
+                width={200}
+                height={100}
+                className="mt-2 border rounded-md"
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label>Demo URL</label>
+            <input
+              type="url"
+              name="demoUrl"
+              value={form.demoUrl}
+              onChange={handleChange}
+              className="w-full mt-1 p-2 border rounded-md"
+            />
+          </div>
+          <div>
+            <label>Gunakan URL</label>
+            <input
+              type="url"
+              name="useUrl"
+              value={form.useUrl}
+              onChange={handleChange}
+              className="w-full mt-1 p-2 border rounded-md"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2"
+          >
+            <Save size={18} />
+            {loading ? "Menyimpan..." : editing ? "Simpan Perubahan" : "Tambah"}
+          </button>
+
+          {editing && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="bg-gray-400 text-white px-4 py-2 rounded-md flex items-center gap-2"
+            >
+              <X size={18} /> Batal
+            </button>
+          )}
+        </div>
+      </form>
+
+      {/* SEARCH + FILTER */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between mb-6">
+        <div className="flex items-center border rounded-md px-2 w-full md:w-1/2">
+          <Search size={18} className="text-gray-500" />
+          <input
+            type="text"
+            placeholder="Cari template..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="p-2 w-full"
+          />
+        </div>
+
+        <select
+          className="border p-2 rounded-md"
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+        >
+          <option value="">Semua Kategori</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* TABLE */}
+      <div className="overflow-x-auto border rounded-lg shadow">
+        <table className="w-full">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-3 border">#</th>
+              <th className="p-3 border">Gambar</th>
+              <th className="p-3 border">Nama</th>
+              <th className="p-3 border">Kategori</th>
+              <th className="p-3 border">Tag</th>
+              <th className="p-3 border text-center">Aksi</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredTemplates.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="text-center p-4 text-gray-500">
+                  Tidak ada data ditemukan.
+                </td>
+              </tr>
+            ) : (
+              filteredTemplates.map((tpl, i) => (
+                <tr key={tpl.id} className="hover:bg-gray-50">
+                  <td className="p-3 border text-center">{i + 1}</td>
+                  <td className="p-3 border text-center">
+                    {tpl.image ? (
+                      <Image
+                        src={tpl.image}
+                        alt=""
+                        width={70}
+                        height={50}
+                        className="rounded-md mx-auto"
+                      />
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="p-3 border">{tpl.name}</td>
+                  <td className="p-3 border">{tpl.category}</td>
+                  <td className="p-3 border">{tpl.tag}</td>
+                  <td className="p-3 border text-center flex gap-2 justify-center">
+                    <button
+                      onClick={() => handleEdit(tpl)}
+                      className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-md flex items-center gap-1"
+                    >
+                      <Edit3 size={16} /> Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(tpl.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md flex items-center gap-1"
+                    >
+                      <Trash2 size={16} /> Hapus
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

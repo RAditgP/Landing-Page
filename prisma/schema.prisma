@@ -53,6 +53,15 @@ model Session {
   @@map("sessions")
 }
 
+model pesankontak {
+  id          String   @id @default(uuid())
+  namaLengkap String
+  alamatEmail String
+  pesanAnda   String
+  dibaca      Boolean  @default(false)
+  dikirimPada DateTime @default(now())
+}
+
 model VerificationToken {
   identifier String
   token      String @unique
@@ -61,3 +70,4 @@ model VerificationToken {
   @@unique([identifier, token])
   @@map("verification_tokens")
 }
+

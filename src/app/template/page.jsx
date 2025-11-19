@@ -3,30 +3,6 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-// Komponen Card sederhana untuk menampilkan satu template (perlu dibuat terpisah)
-const TemplateCard = ({ template }) => (
-  <div className="bg-gray-800 rounded-lg shadow-lg p-4 transition duration-300 hover:scale-[1.02]">
-    <div className="h-48 bg-gray-700 rounded-md mb-4 flex items-center justify-center text-gray-400">
-      {/* Ganti dengan tag <img /> yang sebenarnya */}
-          </div>
-    <h3 className="text-xl font-semibold text-white mb-2">{template.name}</h3>
-    <p className="text-sm text-gray-400 mb-3">{template.description}</p>
-    <div className="flex justify-between items-center">
-      <span className="text-sm font-medium text-indigo-400 border border-indigo-400 rounded-full px-3 py-1">
-        {template.category}
-      </span>
-      <a
-        href={template.link || "#"}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-indigo-400 hover:text-indigo-300 transition duration-150"
-      >
-        Lihat Detail &rarr;
-      </a>
-    </div>
-  </div>
-);
-
 export default function TemplatePage() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,15 +10,14 @@ export default function TemplatePage() {
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  const categories = ["Semua", "Personal", "Bisnis", "Aplikasi", "Lainnya"];
-
+  // 🔹 Ambil data template dari API
   useEffect(() => {
     async function fetchTemplates() {
       try {
         const res = await fetch("/api/templates");
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
-        setTemplates(data);
+        setTemplates(Array.isArray(data) ? data : data.data || []);
         setError(null);
       } catch (err) {
         console.error("❌ Gagal memuat template:", err);
@@ -54,6 +29,13 @@ export default function TemplatePage() {
     fetchTemplates();
   }, []);
 
+  // 🔹 Ambil kategori unik dari template
+  const categories = [
+    "Semua",
+    ...new Set(templates.map((t) => t.category).filter(Boolean)),
+  ];
+
+  // 🔹 Filter berdasarkan kategori
   const filteredTemplates =
     selectedCategory === "Semua"
       ? templates
@@ -73,7 +55,7 @@ export default function TemplatePage() {
         </p>
       </header>
 
-      {/* Kategori */}
+      {/* Filter Kategori */}
       <section className="container mx-auto px-6 pb-16">
         <div className="flex flex-wrap justify-center gap-3 mb-10">
           {categories.map((category) => (
@@ -93,7 +75,9 @@ export default function TemplatePage() {
 
         {/* Status */}
         {loading && (
-          <p className="text-center text-lg text-indigo-400">Memuat template...</p>
+          <p className="text-center text-lg text-indigo-400 animate-pulse">
+            Memuat template...
+          </p>
         )}
         {error && (
           <p className="text-center text-lg text-red-500">🚨 {error}</p>
@@ -134,16 +118,49 @@ export default function TemplatePage() {
                       <p className="text-gray-400 text-sm line-clamp-2 mb-4">
                         {tpl.description}
                       </p>
-                      <div className="flex justify-between items-center">
+
+                      {/* Tag & kategori */}
+                      <div className="flex justify-between items-center mb-2">
                         <span className="text-sm border border-indigo-400 text-indigo-300 rounded-full px-3 py-1">
                           {tpl.category || "Umum"}
                         </span>
-                        <button
-                          onClick={() => setSelectedTemplate(tpl)}
-                          className="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition"
-                        >
-                          Lihat Detail →
-                        </button>
+                        {tpl.tag && (
+                          <span className="text-xs text-gray-400 italic">
+                            #{tpl.tag}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Tombol */}
+                      <div className="flex justify-between mt-3">
+                        {tpl.demoUrl && (
+                          <a
+                            href={tpl.demoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-md text-sm font-medium"
+                          >
+                            Lihat Demo
+                          </a>
+                        )}
+                        {tpl.useUrl && (
+                          <a
+                            href={tpl.useUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-md text-sm font-medium"
+                          >
+                            Gunakan
+                          </a>
+                        )}
+                        {!tpl.demoUrl && !tpl.useUrl && (
+                          <button
+                            onClick={() => setSelectedTemplate(tpl)}
+                            className="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition"
+                          >
+                            Lihat Detail →
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -158,11 +175,10 @@ export default function TemplatePage() {
         )}
       </section>
 
-      {/* Modal Popup Detail */}
+      {/* Modal Detail */}
       {selectedTemplate && (
         <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 backdrop-blur-sm">
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 w-[90%] max-w-3xl relative shadow-2xl border border-gray-700 animate-fadeIn">
-            {/* Tombol close */}
             <button
               onClick={() => setSelectedTemplate(null)}
               className="absolute top-4 right-5 text-gray-400 hover:text-white text-2xl"
@@ -170,7 +186,6 @@ export default function TemplatePage() {
               ✕
             </button>
 
-            {/* Gambar */}
             {selectedTemplate.image && (
               <div className="rounded-xl mb-5 overflow-hidden border border-gray-700">
                 <img
@@ -185,7 +200,6 @@ export default function TemplatePage() {
               </div>
             )}
 
-            {/* Info */}
             <h2 className="text-3xl font-bold text-indigo-400 mb-2">
               {selectedTemplate.name}
             </h2>
@@ -193,7 +207,6 @@ export default function TemplatePage() {
               {selectedTemplate.description}
             </p>
 
-            {/* Tombol aksi */}
             <div className="flex justify-end gap-4">
               <button
                 onClick={() => setSelectedTemplate(null)}
@@ -201,14 +214,24 @@ export default function TemplatePage() {
               >
                 Tutup
               </button>
-              {selectedTemplate.demo_url && (
+              {selectedTemplate.demoUrl && (
                 <a
-                  href={selectedTemplate.demo_url}
+                  href={selectedTemplate.demoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition"
                 >
                   Lihat Demo
+                </a>
+              )}
+              {selectedTemplate.useUrl && (
+                <a
+                  href={selectedTemplate.useUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm font-medium transition"
+                >
+                  Gunakan
                 </a>
               )}
             </div>
