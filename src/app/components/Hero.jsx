@@ -35,11 +35,11 @@ export default function Hero() {
               </button>
             </a>
             <a href="/demo" className="inline-block">
-                <button 
-                  className="border border-white/50 bg-transparent text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-white/10 transition w-full sm:w-auto"
-                >
-                  Lihat Demo Template
-                </button>
+              <button 
+                className="border border-white/50 bg-transparent text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-white/10 transition w-full sm:w-auto"
+              >
+                Lihat Demo Template
+              </button>
             </a>
           </div>
 
@@ -48,54 +48,66 @@ export default function Hero() {
           </p>
         </div>
         
-        {/* KOLOM KANAN — SLIDER MOCKUP 16:9 */}
+        {/* KOLOM KANAN — SLIDER MOCKUP 16:9 (AREA YANG DIMODIFIKASI) */}
         <div className="mt-12 lg:mt-0 flex justify-center lg:justify-end">
-          <div className="relative w-full max-w-xl lg:max-w-2xl">
-            
-            {/* Glow Effect */}
-            <div className="absolute inset-0 bg-blue-500/20 rounded-3xl blur-3xl opacity-50 z-0"></div>
+            <div className="relative w-full max-w-xl lg:max-w-2xl">
+                
+                {/* Glow Effect (Tetap Ada) */}
+                <div className="absolute inset-0 bg-blue-500/40 rounded-3xl blur-3xl opacity-60 z-0 animate-pulse-slow"></div>
 
-            {/* Container */}
-            <div className="relative bg-gray-700 p-6 rounded-3xl shadow-[0_20px_50px_rgba(30,144,255,0.5)] border border-gray-600">
+                {/* Container Utama Mockup: bg-transparent p-0 untuk menghilangkan latar belakang hitam */}
+                <div className="relative **bg-transparent p-0** rounded-3xl shadow-[0_25px_60px_rgba(30,144,255,0.7)] border border-blue-500/30 transform hover:scale-[1.01] transition duration-300">
 
-              <div className="w-full aspect-video overflow-hidden rounded-2xl">
-                <Swiper
-                  modules={[Pagination, Autoplay]}
-                  pagination={{ clickable: true }}
-                  autoplay={{ delay: 2500, disableOnInteraction: false }}
-                  loop={true}
-                  className="w-full h-full"
-                >
-                  <SwiperSlide>
-                    <img 
-                      src="/mockups/mockup1.png"
-                      alt="Mockup 1"
-                      className="w-full h-full object-cover"
-                    />
-                  </SwiperSlide>
+                    {/* Title Mockup */}
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-4 py-1 bg-blue-600 text-white text-sm font-semibold rounded-full shadow-lg whitespace-nowrap z-10">
+                        Perkenalan Template DevLaunch
+                    </div>
 
-                  <SwiperSlide>
-                    <img 
-                      src="/mockups/mockup2.png"
-                      alt="Mockup 2"
-                      className="w-full h-full object-cover"
-                    />
-                  </SwiperSlide>
+                    {/* Area Swiper (Gambar): Menggunakan rounded-3xl dan border tebal sebagai bingkai */}
+                    <div className="w-full aspect-video overflow-hidden **rounded-3xl** border-4 border-gray-600/50">
+                        <Swiper
+                            modules={[Pagination, Autoplay]}
+                            pagination={{ clickable: true }}
+                            autoplay={{ delay: 3000, disableOnInteraction: false }} 
+                            loop={true}
+                            className="w-full h-full"
+                        >
+                            <SwiperSlide>
+                                <img 
+                                    src="/mockups/mockup1.png"
+                                    alt="Demo Template 1"
+                                    className="w-full h-full object-cover"
+                                />
+                            </SwiperSlide>
 
-                  <SwiperSlide>
-                    <img 
-                      src="/mockups/mockup3.png"
-                      alt="Mockup 3"
-                      className="w-full h-full object-cover"
-                    />
-                  </SwiperSlide>
-                </Swiper>
-              </div>
+                            <SwiperSlide>
+                                <img 
+                                    src="/mockups/mockup2.png"
+                                    alt="Demo Template 2"
+                                    className="w-full h-full object-cover"
+                                />
+                            </SwiperSlide>
 
+                            <SwiperSlide>
+                                <img 
+                                    src="/mockups/mockup3.png"
+                                    alt="Demo Template 3"
+                                    className="w-full h-full object-cover"
+                                />
+                            </SwiperSlide>
+                        </Swiper>
+                    </div>
+                    
+                    {/* Indikator kamera/dot di bagian atas container */}
+                    <div className="absolute top-4 left-4 flex space-x-1 z-20">
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    </div>
+
+                </div>
             </div>
-          </div>
         </div>
-
       </div>
     </section>
   );
