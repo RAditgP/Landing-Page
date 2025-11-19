@@ -15,10 +15,7 @@ export default function AdminPesanPage() {
 
     try {
       const response = await fetch('/api/admin/pesan');
-
-      if (!response.ok) {
-        throw new Error('Gagal mengambil data pesan dari server.');
-      }
+      if (!response.ok) throw new Error('Gagal mengambil data pesan dari server.');
 
       setMessages(await response.json());
     } catch (err) {
@@ -33,72 +30,80 @@ export default function AdminPesanPage() {
   }, [fetchMessages]);
 
   return (
-    <div className="min-h-screen w-full p-8 bg-gradient-to-br from-[#0a0f1f] via-[#0d1326] to-[#11182c] text-white">
+    <div className="min-h-screen w-full p-8 bg-white text-gray-900">
 
+      {/* Heading */}
       <div className="mb-10">
-        <h1 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-400 to-blue-500 text-transparent bg-clip-text">
+        <h1 className="text-4xl font-extrabold text-gray-900">
           Pesan Masuk
         </h1>
-        <p className="mt-1 text-gray-400">Lihat semua pesan dari pengunjung website anda</p>
+        <p className="mt-1 text-gray-500">Lihat semua pesan dari pengunjung website anda</p>
       </div>
 
+      {/* Loading */}
       {isLoading && (
         <div className="text-center py-10">
-          <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-gray-400 mt-3">Sedang memuat pesan...</p>
+          <div className="animate-spin h-10 w-10 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-gray-500 mt-3">Sedang memuat pesan...</p>
         </div>
       )}
 
+      {/* Error */}
       {error && (
-        <div className="text-center text-red-400 py-6 bg-red-900/20 border border-red-600 rounded-xl">
+        <div className="text-center text-red-600 py-6 bg-red-100 border border-red-300 rounded-xl">
           Error: {error}
         </div>
       )}
 
+      {/* Empty State */}
       {!isLoading && messages.length === 0 && (
-        <div className="max-w-xl mx-auto mt-10 bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-10 text-center shadow-xl">
-          <Mail className="h-16 w-16 mx-auto text-gray-500 opacity-70" />
-          <h3 className="text-lg text-gray-300 mt-4">Tidak ada pesan kontak baru</h3>
+        <div className="max-w-xl mx-auto mt-10 bg-gray-100 border border-gray-300 rounded-2xl p-10 text-center shadow">
+          <Mail className="h-16 w-16 mx-auto text-gray-400" />
+          <h3 className="text-lg text-gray-700 mt-4">Tidak ada pesan kontak baru</h3>
           <p className="text-gray-500 text-sm mt-1">Pesan dari pengunjung akan muncul di sini</p>
         </div>
       )}
 
+      {/* Message Cards */}
       <div className="grid md:grid-cols-2 gap-8 mt-6">
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className="p-6 rounded-2xl bg-white/10 shadow-lg 
-            backdrop-blur-xl border border-white/10
-            transition transform hover:scale-[1.02] hover:shadow-2xl"
+            className="p-6 rounded-2xl bg-white shadow-lg border border-gray-200 transition transform hover:scale-[1.02] hover:shadow-xl"
           >
+            {/* Status & Timestamp */}
             <div className="flex justify-between items-center mb-3">
               <span
-                className={`px-3 py-1 rounded-full text-xs font-bold shadow 
-                ${msg.dibaca ? 'bg-gray-600 text-gray-300' : 'bg-indigo-600 text-white'}`}
+                className={`px-3 py-1 rounded-full text-xs font-bold 
+                ${msg.dibaca ? 'bg-gray-300 text-gray-700' : 'bg-indigo-600 text-white'}`}
               >
                 {msg.dibaca ? 'Sudah Dibaca' : 'Baru'}
               </span>
 
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-gray-500">
                 {moment(msg.dikirimPada).format('DD MMM YYYY • HH:mm')}
               </span>
             </div>
 
-            <h2 className="text-2xl font-bold text-white">{msg.namaLengkap}</h2>
+            {/* Nama */}
+            <h2 className="text-2xl font-bold text-gray-900">{msg.namaLengkap}</h2>
 
+            {/* Email */}
             <a
               href={`mailto:${msg.alamatEmail}`}
-              className="text-indigo-400 hover:underline text-sm"
+              className="text-indigo-600 hover:underline text-sm"
             >
               {msg.alamatEmail}
             </a>
 
-            <p className="mt-4 text-gray-300 leading-relaxed whitespace-pre-line">
+            {/* Pesan */}
+            <p className="mt-4 text-gray-700 leading-relaxed whitespace-pre-line">
               {msg.pesanAnda}
             </p>
 
+            {/* Tombol Tandai Dibaca */}
             {!msg.dibaca && (
-              <button className="mt-5 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-semibold transition duration-200 shadow">
+              <button className="mt-5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition duration-200 shadow">
                 Tandai Dibaca
               </button>
             )}

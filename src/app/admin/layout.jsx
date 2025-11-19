@@ -28,9 +28,8 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="min-h-screen flex bg-gray-100 text-gray-900">
-      {/* ====================== */}
-      {/* 📱 Sidebar (Mobile) */}
-      {/* ====================== */}
+
+      {/* Overlay mobile */}
       <div
         className={`fixed inset-0 bg-black/40 z-20 md:hidden ${
           sidebarOpen ? "block" : "hidden"
@@ -38,9 +37,7 @@ export default function AdminLayout({ children }) {
         onClick={() => setSidebarOpen(false)}
       ></div>
 
-      {/* ====================== */}
-      {/* 🧭 Sidebar */}
-      {/* ====================== */}
+      {/* Sidebar */}
       <aside
         className={`fixed md:static z-30 bg-[#1e293b] text-white w-64 min-h-screen p-5 transition-transform duration-300 border-r border-gray-700 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -77,35 +74,11 @@ export default function AdminLayout({ children }) {
             );
           })}
         </nav>
-
-        {/* Footer info kecil */}
-        <div className="absolute bottom-5 left-5 text-xs text-gray-400">
-          v1.0 • Admin Panel
-        </div>
       </aside>
 
-      {/* ====================== */}
-      {/* 🧠 Main Content */}
-      {/* ====================== */}
-      <main className="flex-1 flex flex-col">
-        {/* 🔝 Top Bar */}
-        <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <button
-              className="md:hidden text-gray-600 hover:text-gray-900"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={24} />
-            </button>
-            <h2 className="text-lg font-semibold text-gray-800">
-              Admin Dashboard
-            </h2>
-          </div>
-          <div className="text-sm text-gray-500">Welcome, Rayyan 👋</div>
-        </header>
-
-        {/* 💼 Main Children Content */}
-        <div className="p-8 bg-gray-50 flex-1">{children}</div>
+      {/* Content (tanpa header/topbar) */}
+      <main className="flex-1 p-6">
+        {children}
       </main>
     </div>
   );
