@@ -53,6 +53,18 @@ model Session {
   @@map("sessions")
 }
 
+model template {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String
+  description String
+  tag         String?
+  image       String?
+  demoUrl     String?
+  useUrl      String?
+  createdAt   DateTime @default(now())
+}
+
 model pesankontak {
   id          String   @id @default(uuid())
   namaLengkap String
