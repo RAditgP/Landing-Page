@@ -1,17 +1,22 @@
 "use client";
+
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export default function HargaPage() {
   const router = useRouter();
+  const { data: session } = useSession(); // Cek login atau tidak
+
+  const isLoggedIn = !!session;
 
   const plans = [
     {
       name: "Gratis",
       price: "Rp 0",
-      ctaText: "Mulai Gratis",
-      link: "/daftar",
+      ctaText: isLoggedIn ? "Anda Sudah Terdaftar" : "Mulai Gratis",
+      link: isLoggedIn ? "/dashboard" : "/daftar", 
       features: [
         "Akses fitur dasar",
         "Desain template terbatas",
@@ -22,8 +27,8 @@ export default function HargaPage() {
     {
       name: "Pro",
       price: "Rp 49.000/bulan",
-      ctaText: "Pilih Pro",
-      link: "/pembayaran?plan=pro",
+      ctaText: isLoggedIn ? "Pilih Pro" : "pilih Pro",
+      link: isLoggedIn ? "/pembayaran?plan=pro" : "/login", 
       features: [
         "Semua fitur Gratis",
         "Akses template premium",
@@ -35,8 +40,8 @@ export default function HargaPage() {
     {
       name: "Bisnis",
       price: "Rp 99.000/bulan",
-      ctaText: "Pilih Bisnis",
-      link: "/pembayaran?plan=bisnis",
+      ctaText: isLoggedIn ? "Pilih Bisnis" : "PIlih Bisnis",
+      link: isLoggedIn ? "/pembayaran?plan=bisnis" : "/login",
       features: [
         "Semua fitur Pro",
         "Proyek tanpa batas",
@@ -50,10 +55,13 @@ export default function HargaPage() {
   return (
     <main className="overflow-x-hidden bg-gray-900 min-h-screen">
       <Navbar />
+
       <section className="text-white flex flex-col items-center py-16 sm:py-20 px-4 sm:px-6">
+        
         <h1 className="text-4xl sm:text-5xl font-extrabold mb-4 text-center">
           💰 Harga yang Transparan
         </h1>
+
         <p className="max-w-3xl text-center text-gray-400 mb-12 sm:mb-16 text-base sm:text-lg px-2">
           Pilih paket yang paling sesuai dengan kebutuhan proyek Anda.
         </p>
@@ -65,6 +73,7 @@ export default function HargaPage() {
               className="bg-gray-800 p-8 rounded-2xl shadow-xl hover:bg-blue-600 hover:scale-105 transition duration-300"
             >
               <h2 className="text-2xl font-bold mb-2">{p.name}</h2>
+
               <p className="text-3xl font-extrabold text-blue-400 mb-4">
                 {p.price}
               </p>
@@ -87,6 +96,7 @@ export default function HargaPage() {
           ))}
         </div>
       </section>
+
       <Footer />
     </main>
   );

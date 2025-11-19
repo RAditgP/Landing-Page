@@ -1,5 +1,6 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Providers from "./providers"; // ⬅ penting! JANGAN pakai {} tidak ada named export
+import { Geist, Geist_Mono } from "next/font/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,16 +14,15 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "DevLaunch - Buat Website Modern Lebih Cepat dan Efisien",
-  description: "Dengan DevLaunch, kamu bisa membangun landing page profesional hanya dalam hitungan menit. Coba sekarang dan rasakan kemudahannya!",
+  description:
+    "Dengan DevLaunch, kamu bisa membangun landing page profesional hanya dalam hitungan menit.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
