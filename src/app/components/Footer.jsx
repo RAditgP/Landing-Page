@@ -17,7 +17,7 @@ export default function Footer() {
       links: [
         { name: "Harga", href: "/harga" },
         { name: "Kontak", href: "/kontak" },
-        { name: "Karir", href: "#" },
+       
       ],
     },
     {
