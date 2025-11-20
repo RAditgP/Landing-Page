@@ -63,10 +63,11 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Social Login */}
+       {/* Social Login */}
         <div className="flex flex-col gap-3 mb-6">
           <button
             type="button"
+            onClick={() => handleSocialLogin("google")}
             className="w-full flex items-center justify-center bg-white hover:bg-gray-200 text-gray-900 font-semibold py-2.5 rounded-lg transition border border-gray-300"
           >
             <Globe size={20} className="mr-2" />
@@ -75,13 +76,13 @@ export default function LoginPage() {
 
           <button
             type="button"
+            onClick={() => handleSocialLogin("github")}
             className="w-full flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2.5 rounded-lg transition border border-gray-600"
           >
             <Github size={20} className="mr-2" />
             Masuk dengan GitHub
           </button>
         </div>
-
         {/* Divider */}
         <div className="flex items-center mb-6">
           <div className="flex-grow border-t border-gray-700"></div>
