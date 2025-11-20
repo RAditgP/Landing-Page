@@ -35,6 +35,15 @@ export async function POST(req) {
       );
     }
 
+    // 🟩 SIMPAN LOG LOGIN
+    await prisma.login_logs.create({
+      data: {
+        userId: user.id,
+        email: user.email,
+        loginAt: new Date(),
+      },
+    });
+
     return NextResponse.json(
       { message: "Login berhasil", user },
       { status: 200 }
