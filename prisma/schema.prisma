@@ -90,7 +90,7 @@ model Template {
   createdAt   DateTime @default(now())
 }
 
-model PesanKontak {
+model pesankontak {
   id          String   @id @default(uuid())
   namaLengkap String
   alamatEmail String
