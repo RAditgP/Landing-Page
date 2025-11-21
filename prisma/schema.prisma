@@ -7,26 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-<<<<<<< HEAD
-mode  id        Int       @id @default(autoincrement())
-  email     String?   @unique @db.VarChar(100)
-  name      String?
-  password  String?   @db.VarChar(255)
-  createdAt DateTime? @db.Timestamp(0)
-
-  @@map("users")
-}
-
-model  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
- Session {
-  id         Int       @id @default(autoincrement())
-  user_id    Int
-  token      String    @unique(map: "token") @db.VarChar(255)
-  expires_at DateTime  @db.DateTime(0)
-  created_at DateTime? @default(now()) @db.Timestamp(0)
-=======
 //
 // ==================
 //   NEXTAUTH MODELS
@@ -79,7 +59,6 @@ model Session {
   expires      DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
->>>>>>> ab4678de8ad55e7b8ec95861ce4f4dee4e42cefc
 
   @@map("sessions")
 }
@@ -107,7 +86,7 @@ model Template {
   tag         String?
   image       String?
   demoUrl     String?
-  useUrl     String?
+  useUrl      String?
   createdAt   DateTime @default(now())
 }
 
@@ -128,13 +107,6 @@ model Transaction {
   harga     String
   metode    String
   createdAt DateTime @default(now())
-<<<<<<< HEAD
-s    DateTimodel login_logs {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  email     String
-  loginAt   DateTime @default(now())
-=======
 }
 
 model LoginLog {
@@ -144,12 +116,6 @@ model LoginLog {
   loginAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
->>>>>>> ab4678de8ad55e7b8ec95861ce4f4dee4e42cefc
 
   @@map("login_logs")
-}
-me
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
 }
