@@ -54,6 +54,16 @@ export default function TemplatePage() {
           Pilih template terbaik yang dibangun dengan Next.js dan Tailwind CSS untuk proyek Anda.
         </p>
       </header>
+      {/* Tombol Buat Website */}
+      <div className="container mx-auto px-6 -mt-10 mb-10 flex justify-center">
+        <a
+          href="/builder"
+          className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-lg shadow-green-500/30 transition"
+        >
+          + Buat Website Baru
+        </a>
+      </div>
+
 
       {/* Filter Kategori */}
       <section className="container mx-auto px-6 pb-16">
@@ -62,11 +72,10 @@ export default function TemplatePage() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-2 rounded-full font-medium transition duration-300 ${
-                selectedCategory === category
+              className={`px-6 py-2 rounded-full font-medium transition duration-300 ${selectedCategory === category
                   ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
+                }`}
             >
               {category}
             </button>
