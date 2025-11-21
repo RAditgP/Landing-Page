@@ -8,35 +8,35 @@ export async function POST(req) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: "Email dan password wajib diisi" },
+        { success: false, message: "Email dan password wajib diisi" },
         { status: 400 }
       );
     }
 
-    // Cari user
+    // Cari user di DB
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
       return NextResponse.json(
-        { error: "User tidak ditemukan" },
+        { success: false, message: "User tidak ditemukan" },
         { status: 404 }
       );
     }
 
     // Cek password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isValid = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordValid) {
+    if (!isValid) {
       return NextResponse.json(
-        { error: "Password salah" },
+        { success: false, message: "Password salah" },
         { status: 401 }
       );
     }
 
-    // 🟩 SIMPAN LOG LOGIN
-    await prisma.login_logs.create({
+    // Hanya catat log login
+    await prisma.loginLog.create({
       data: {
         userId: user.id,
         email: user.email,
@@ -44,14 +44,23 @@ export async function POST(req) {
       },
     });
 
+    // Mengirim kembali user agar NextAuth bisa pakai
     return NextResponse.json(
-      { message: "Login berhasil", user },
+      {
+        success: true,
+        message: "Valid",
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+      },
       { status: 200 }
     );
   } catch (error) {
     console.error("Login Error:", error);
     return NextResponse.json(
-      { error: "Server error" },
+      { success: false, message: "Server error" },
       { status: 500 }
     );
   }

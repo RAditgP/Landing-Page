@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Mail, Key, LogIn, UserPlus, Github, Globe, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
@@ -15,28 +16,26 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+    // 🔥 Login via NextAuth (credentials)
+    const res = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
 
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || "Login gagal");
-
-      alert(`✅ ${data.message} — Selamat datang, ${data.user.email}!`);
-
-      // Simpan user (non-persisten)
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      router.push("/");
-    } catch (err) {
-      alert(`❌ ${err.message}`);
-    } finally {
+    if (res.error) {
+      alert("❌ Login gagal: " + res.error);
       setIsLoading(false);
+      return;
     }
+
+    // 🔥 Jika sukses, arahkan ke dashboard/home
+    router.push("/");
+  };
+
+  // 🔹 SOCIAL LOGIN (Google / GitHub)
+  const handleSocialLogin = (provider) => {
+    signIn(provider, { callbackUrl: "/" });
   };
 
   return (
@@ -55,15 +54,11 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center mb-8 mt-6">
           <LogIn size={36} className="mx-auto text-green-400 mb-3" />
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Masuk ke Akun Anda
-          </h1>
-          <p className="text-gray-400 text-sm">
-            Selamat datang kembali! Silakan masukkan detail Anda.
-          </p>
+          <h1 className="text-3xl font-bold text-white mb-2">Masuk ke Akun Anda</h1>
+          <p className="text-gray-400 text-sm">Selamat datang kembali! Silakan masukkan detail Anda.</p>
         </div>
 
-       {/* Social Login */}
+        {/* Social Login */}
         <div className="flex flex-col gap-3 mb-6">
           <button
             type="button"
@@ -83,6 +78,7 @@ export default function LoginPage() {
             Masuk dengan GitHub
           </button>
         </div>
+
         {/* Divider */}
         <div className="flex items-center mb-6">
           <div className="flex-grow border-t border-gray-700"></div>
@@ -92,7 +88,6 @@ export default function LoginPage() {
 
         {/* Form Login */}
         <form onSubmit={handleLogin}>
-          
           {/* Email */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -126,16 +121,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Lupa password */}
-          <div className="flex justify-end mb-6">
-            <Link
-              href="/lupa-sandi"
-              className="text-sm text-blue-400 hover:text-blue-300 transition"
-            >
-              Lupa Kata Sandi?
-            </Link>
-          </div>
-
           {/* Tombol Login */}
           <button
             type="submit"
@@ -146,7 +131,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Link Daftar */}
+        {/* Link daftar */}
         <p className="text-center text-sm text-gray-500 mt-6">
           Belum punya akun?
           <Link
