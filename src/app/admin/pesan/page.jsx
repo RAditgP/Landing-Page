@@ -101,12 +101,6 @@ export default function AdminPesanPage() {
               {msg.pesanAnda}
             </p>
 
-            {/* Tombol Tandai Dibaca */}
-            {!msg.dibaca && (
-              <button className="mt-5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition duration-200 shadow">
-                Tandai Dibaca
-              </button>
-            )}
           </div>
         ))}
       </div>

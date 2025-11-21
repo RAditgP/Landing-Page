@@ -1,6 +1,8 @@
 "use client";
+import { useSession } from "next-auth/react";
 
 export default function Footer() {
+  const { data: session } = useSession();   // <--- CEK LOGIN
   const currentYear = new Date().getFullYear();
   
   const navLinks = [
@@ -17,7 +19,6 @@ export default function Footer() {
       links: [
         { name: "Harga", href: "/harga" },
         { name: "Kontak", href: "/kontak" },
-       
       ],
     },
     {
@@ -33,17 +34,17 @@ export default function Footer() {
     <footer className="bg-gray-900 text-gray-300 pt-16 pb-8 border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* --- Bagian Atas: Logo, Deskripsi & Navigasi --- */}
+        {/* Bagian Atas */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 border-b border-gray-700 pb-10 mb-8">
           
-          {/* Kolom 1: Logo & Deskripsi (Lebar 2 kolom) */}
+          {/* Logo */}
           <div className="col-span-2 md:col-span-2">
             <h3 className="text-2xl font-extrabold mb-3 text-blue-400">DevLaunch</h3>
             <p className="text-sm mb-4 text-gray-400 max-w-sm">
               DevLaunch adalah solusi terdepan untuk membangun website profesional dengan Next.js dan Tailwind CSS, cepat dan tanpa pusing.
             </p>
-            
-            {/* Link Sosial Media (dengan ikon) */}
+
+            {/* Sosmed */}
             <div className="flex gap-4 mt-6">
               {/* Instagram */}
               <a href="https://www.instagram.com/gp_raditya/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-400 transition">
@@ -73,7 +74,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Kolom Navigasi Link Cepat, Perusahaan, Legal */}
+          {/* Navigasi */}
           {navLinks.map((section, index) => (
             <div key={index} className="col-span-1">
               <h4 className="text-sm font-bold text-white uppercase mb-4">{section.title}</h4>
@@ -88,37 +89,38 @@ export default function Footer() {
               </ul>
             </div>
           ))}
-
         </div>
 
-        {/* --- Bagian CTA dan Hak Cipta --- */}
+        {/* CTA & Copyright */}
         <div className="flex flex-col md:flex-row justify-between items-center">
             
-            {/* CTA Tambahan di Footer */}
+          {/* CTA Hanya Untuk User BELUM Login */}
+          {!session && (
             <div className="mb-4 md:mb-0 text-center md:text-left">
-                <p className="text-sm text-gray-400 mb-2">
-                    Siap memulai proyek Anda?
-                </p>
-                <a 
-                    href="/daftar" 
-                    className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
-                >
-                    Daftar Gratis
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                </a>
+              <p className="text-sm text-gray-400 mb-2">
+                Siap memulai proyek Anda?
+              </p>
+              <a 
+                href="/daftar" 
+                className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
+              >
+                Daftar Gratis
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </a>
             </div>
+          )}
 
-            {/* Hak Cipta */}
-            <div className="text-center text-sm">
-                <p className="text-gray-500">
-                    © {currentYear} DevLaunch. Semua hak dilindungi.
-                </p>
-                <p className="text-gray-500 text-xs mt-1">
-                    Dibuat dengan ✨ oleh RAditgP
-                </p>
-            </div>
+          {/* Hak Cipta */}
+          <div className="text-center text-sm">
+            <p className="text-gray-500">
+              © {currentYear} DevLaunch. Semua hak dilindungi.
+            </p>
+            <p className="text-gray-500 text-xs mt-1">
+              Dibuat dengan ✨ oleh RAditgP
+            </p>
+          </div>
         </div>
       </div>
     </footer>

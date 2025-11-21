@@ -34,7 +34,7 @@ export default function Hero() {
                 Mulai Gratis Sekarang
               </button>
             </a>
-            <a href="/demo" className="inline-block">
+            <a href="/template" className="inline-block">
               <button 
                 className="border border-white/50 bg-transparent text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-white/10 transition w-full sm:w-auto"
               >
